@@ -1,6 +1,10 @@
 plugins {
     `java-library`
+    id("org.springframework.boot") version "2.2.0.RELEASE"
 }
+
+// Allows to omit version numbers when declaring dependencies
+apply(plugin = "io.spring.dependency-management")
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
@@ -14,10 +18,15 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.addAll(arrayOf("--release", "8"))
 }
 
+// The bootJar task requires a main class, so we have to use the classic jar task to build the library.
+tasks.getByName<Jar>("jar") {
+	enabled = true
+}
+
 repositories {
     jcenter()
 }
 
 dependencies {
-    implementation("org.springframework:spring-web:5.2.0.RELEASE")
+    implementation("org.springframework:spring-web")
 }
