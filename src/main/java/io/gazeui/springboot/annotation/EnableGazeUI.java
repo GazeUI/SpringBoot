@@ -39,4 +39,6 @@ import io.gazeui.springboot.configuration.GazeUIConfiguration;
 @Documented
 @Import(GazeUIConfiguration.class)
 public @interface EnableGazeUI {
+	
+	Class<?> mainWindowClass();
 }

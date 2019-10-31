@@ -24,10 +24,28 @@
 
 package io.gazeui.springboot.configuration;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
+import io.gazeui.springboot.annotation.EnableGazeUI;
+
 @Configuration
 @ComponentScan("io.gazeui.springboot")
-public class GazeUIConfiguration {
+public class GazeUIConfiguration implements ApplicationContextAware {
+	
+	private Class<?> mainWindowClass;
+	
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) {
+		String beanNameWithEnableGazeUI = applicationContext.getBeanNamesForAnnotation(EnableGazeUI.class)[0];
+    	EnableGazeUI enableGazeUIAnnotation = applicationContext.findAnnotationOnBean(beanNameWithEnableGazeUI, EnableGazeUI.class);
+    	
+    	this.mainWindowClass = enableGazeUIAnnotation.mainWindowClass();
+	}
+	
+	public Class<?> getMainWindowClass() {
+		return this.mainWindowClass;
+	}
 }
