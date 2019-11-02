@@ -33,12 +33,13 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.Import;
 
 import io.gazeui.springboot.configuration.GazeUIConfiguration;
+import io.gazeui.ui.Window;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
 @Import(GazeUIConfiguration.class)
 public @interface EnableGazeUI {
-	
-	Class<?> mainWindowClass();
+    
+    Class<? extends Window> mainWindowClass();
 }

@@ -22,31 +22,26 @@
  * SOFTWARE.
  */
 
-package io.gazeui.springboot.configuration;
+package io.gazeui.ui;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-
-import io.gazeui.springboot.annotation.EnableGazeUI;
-import io.gazeui.ui.Window;
-
-@Configuration
-@ComponentScan("io.gazeui.springboot")
-public class GazeUIConfiguration {
+public class Button extends Control {
     
-    private final Class<? extends Window> mainWindowClass;
-    
-    @Autowired
-    public GazeUIConfiguration(ApplicationContext applicationContext) {
-        String beanNameWithEnableGazeUI = applicationContext.getBeanNamesForAnnotation(EnableGazeUI.class)[0];
-        EnableGazeUI enableGazeUIAnnotation = applicationContext.findAnnotationOnBean(beanNameWithEnableGazeUI, EnableGazeUI.class);
+    private String text;
+
+    @Override
+    protected String getRenderScript() {
+        String script = String.format("var btn = document.createElement(\"button\");\n" + 
+                "btn.textContent = \"%s\";\n" + 
+                "document.body.appendChild(btn);", this.getText());
         
-        this.mainWindowClass = enableGazeUIAnnotation.mainWindowClass();
+        return script;
     }
     
-    public Class<? extends Window> getMainWindowClass() {
-        return this.mainWindowClass;
+    public String getText() {
+        return this.text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
     }
 }

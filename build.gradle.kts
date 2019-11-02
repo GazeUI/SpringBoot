@@ -20,7 +20,7 @@ tasks.withType<JavaCompile> {
 
 // The bootJar task requires a main class, so we have to use the classic jar task to build the library.
 tasks.getByName<Jar>("jar") {
-	enabled = true
+    enabled = true
 }
 
 repositories {
@@ -30,4 +30,5 @@ repositories {
 dependencies {
     implementation("org.springframework:spring-web")
     implementation("org.springframework:spring-context")
+    implementation("org.apache.tomcat.embed:tomcat-embed-core")
 }
