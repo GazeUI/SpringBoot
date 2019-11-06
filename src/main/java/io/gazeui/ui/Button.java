@@ -27,15 +27,6 @@ package io.gazeui.ui;
 public class Button extends Control {
     
     private String text;
-
-    @Override
-    protected String getRenderScript() {
-        String script = String.format("var btn = document.createElement(\"button\");\n" + 
-                "btn.textContent = \"%s\";\n" + 
-                "document.body.appendChild(btn);", this.getText());
-        
-        return script;
-    }
     
     public String getText() {
         return this.text;
@@ -43,5 +34,39 @@ public class Button extends Control {
 
     public void setText(String text) {
         this.text = text;
+    }
+    
+    @Override
+    protected String getRenderScript(Control previousControlState) {
+        StringBuilder sbRenderScript = new StringBuilder();
+        
+        if (previousControlState == null) {
+            sbRenderScript.append("var btn = document.createElement('button');\n");
+            
+            if (this.getId() != null) {
+                sbRenderScript.append(String.format("btn.id = '%s';\n", this.getId()));
+            }
+            
+            // TODO: JavaScript escape
+            if (this.getText() != null && !this.getText().isEmpty()) {
+                sbRenderScript.append(String.format("btn.textContent = '%s';\n", this.getText()));
+            }
+            
+            sbRenderScript.append("document.body.appendChild(btn);");
+        } else {
+            Button previousButtonState = (Button)previousControlState;
+            
+            if (!this.getText().equals(previousButtonState.getText())) {
+                if (this.getId() != null) {
+                    sbRenderScript.append(String.format(
+                            "var btn = document.getElementById('%s');\n" + 
+                            "btn.textContent = '%s';", this.getId(), this.getText()));
+                } else {
+                    throw RenderException.createNonExistentIdException();
+                }
+            }
+        }
+        
+        return sbRenderScript.toString();
     }
 }

@@ -24,18 +24,14 @@
 
 package io.gazeui.ui;
 
-public abstract class Window extends ContainerControl {
-
-    // TODO: Temporary
-    public abstract void updateUI();
+@SuppressWarnings("serial")
+public class RenderException extends RuntimeException {
     
-    @Override
-    public Window clone() {
-        return (Window)super.clone();
+    static RenderException createNonExistentIdException() {
+        return new RenderException("It is not possible to update or remove controls without Id");
     }
     
-    @Override
-    public String getRenderScript(Control previousControlState) {
-        return super.getRenderScript(previousControlState);
+    public RenderException(String message) {
+        super(message);
     }
 }

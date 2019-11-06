@@ -50,14 +50,28 @@ public class GazeUIController {
     
     @GetMapping(path = "/ui", produces = MediaType.TEXT_HTML_VALUE)
     public String getInitialHtml() {
-        String html = "<!DOCTYPE html>\n" +
+        String html =
+                "<!DOCTYPE html>\n" +
                 "<html>\n" +
                 "<head>\n" +
-                "  <meta charset=\"UTF-8\">\n" +
+                "  <meta charset='UTF-8'>\n" +
                 "  <title></title>\n" +
-                "  <script defer src=\"create-ui.js\"></script>\n" +
+                "  <script defer src='create-ui.js'></script>\n" +
+                "  <script>\n" +
+                "    function executeJavaScriptCode(code) {\n" +
+                "        return Function(code)();\n" +
+                "    }\n" +
+                "    \n" +
+                "    async function btnUpdateUI_OnClick() {\n" +
+                "        let response = await fetch('update-ui.js');\n" +
+                "        let responseText = await response.text();\n" +
+                "        \n" +
+                "        executeJavaScriptCode(responseText);\n" +
+                "    }\n" +
+                "  </script>\n" +
                 "</head>\n" +
                 "<body>\n" +
+                "  <button onclick='btnUpdateUI_OnClick()'>Update UI</button>\n" +
                 "</body>\n" +
                 "</html>";
         
@@ -77,8 +91,39 @@ public class GazeUIController {
             session.setAttribute("viewState", viewStateWindow);
         }
         
-        String script = viewStateWindow.getRenderScript();
+        final int extraTextLength = 34;
+        String renderScript = viewStateWindow.getRenderScript(null);
+        StringBuilder sbScript = new StringBuilder(renderScript.length() + extraTextLength);
         
-        return script;
+        sbScript.append("'use strict';\n");
+        sbScript.append("\n");
+        sbScript.append("(function() {\n");
+        sbScript.append(renderScript);
+        sbScript.append("})();");
+        
+        return sbScript.toString();
+    }
+    
+    @GetMapping(path = "/update-ui.js", produces = "text/javascript")
+    public String getUIUpdateScript(HttpSession session) {
+        Window viewStateWindow = (Window)session.getAttribute("viewState");
+        Window previousViewStateWindow = viewStateWindow.clone();
+        
+        viewStateWindow.updateUI();
+        
+        String renderScript = viewStateWindow.getRenderScript(previousViewStateWindow);
+        
+        if (!renderScript.isEmpty()) {
+            final int extraTextLength = 15;
+            StringBuilder sbScript = new StringBuilder(renderScript.length() + extraTextLength);
+            
+            sbScript.append("'use strict';\n");
+            sbScript.append("\n");
+            sbScript.append(renderScript);
+            
+            return sbScript.toString();
+        } else {
+            return "";
+        }
     }
 }

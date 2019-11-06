@@ -24,7 +24,48 @@
 
 package io.gazeui.ui;
 
-public abstract class Control {
+public abstract class Control implements Cloneable {
     
-    protected abstract String getRenderScript();
+    private String id;
+    // If this is a cloned control, stores the control from which this control was cloned.
+    private Control sourceControl;
+    
+    public Control() {
+    }
+    
+    public Control(String id) {
+        this.setId(id);
+    }
+    
+    public String getId() {
+        return this.id;
+    }
+
+    public void setId(String id) {
+        // TODO: Validate control Id
+        this.id = id;
+    }
+
+    protected Control getSourceControl() {
+        return this.sourceControl;
+    }
+
+    private void setSourceControl(Control sourceControl) {
+        this.sourceControl = sourceControl;
+    }
+    
+    protected abstract String getRenderScript(Control previousControlState);
+    
+    @Override
+    protected Control clone() {
+        try {
+            Control newControl = (Control)super.clone();
+            newControl.setSourceControl(this);
+            
+            return newControl;
+        } catch (CloneNotSupportedException ex) {
+            // Never happens, once Control is implementing Cloneable. 
+            throw new RuntimeException(ex);
+        }
+    }
 }

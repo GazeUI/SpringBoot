@@ -30,7 +30,7 @@ import java.util.List;
 public class ContainerControl extends Control {
     
     private List<Control> controls;
-
+    
     public List<Control> getControls() {
         if (this.controls == null) {
             this.controls = new LinkedList<Control>();
@@ -38,16 +38,84 @@ public class ContainerControl extends Control {
         
         return this.controls;
     }
-
+    
     @Override
-    protected String getRenderScript() {
-        StringBuilder sbScript = new StringBuilder();
+    protected ContainerControl clone() {
+        ContainerControl newContainerControl = (ContainerControl)super.clone();
         
-        for (Control control : this.controls) {
-            sbScript.append(control.getRenderScript());
-            sbScript.append('\n');
+        newContainerControl.controls = new LinkedList<Control>();
+        
+        for (Control control : this.getControls()) {
+            newContainerControl.getControls().add(control.clone());
         }
         
-        return sbScript.toString();
+        return newContainerControl;
+    }
+    
+    @Override
+    protected String getRenderScript(Control previousControlState) {
+        StringBuilder sbAddControlsScript = new StringBuilder();
+        
+        if (previousControlState == null) {
+            for (Control childControl : this.getControls()) {
+                sbAddControlsScript.append(childControl.getRenderScript(null));
+                sbAddControlsScript.append('\n');
+            }
+            
+            return sbAddControlsScript.toString();
+        } else {
+            ContainerControl previousContainerControlState = (ContainerControl)previousControlState;
+            StringBuilder sbRemoveControlsScript = new StringBuilder();
+            StringBuilder sbUpdateControlsScript = new StringBuilder();
+            
+            // 1. Remove
+            for (Control previousChildControlState : previousContainerControlState.getControls()) {
+                if (!this.getControls().contains(previousChildControlState.getSourceControl())) {
+                    if (previousChildControlState.getSourceControl().getId() != null) {
+                        String removeControlScript = String.format(
+                                "var ctl = document.getElementById('%s');\n" + 
+                                "ctl.remove();", previousChildControlState.getSourceControl().getId());
+                        
+                        sbRemoveControlsScript.append(removeControlScript);
+                        sbRemoveControlsScript.append('\n');
+                    } else {
+                        throw RenderException.createNonExistentIdException();
+                    }
+                }
+            }
+            
+            // 2. Update and Add
+            for (Control childControl : this.getControls()) {
+                boolean childControlFound = false;
+                
+                for (Control previousChildControlState : previousContainerControlState.getControls()) {
+                    if (previousChildControlState.getSourceControl() == childControl) {
+                        String updateControlScript = childControl.getRenderScript(previousChildControlState);
+                        
+                        if (!updateControlScript.isEmpty()) {
+                            sbUpdateControlsScript.append(updateControlScript);
+                            sbUpdateControlsScript.append('\n');
+                        }
+                        
+                        childControlFound = true;
+                        break;
+                    }
+                }
+                
+                if (!childControlFound) {
+                    sbAddControlsScript.append(childControl.getRenderScript(null));
+                    sbAddControlsScript.append('\n');
+                }
+            }
+            
+            StringBuilder sbScript = new StringBuilder(sbRemoveControlsScript.length() +
+                    sbUpdateControlsScript.length() + sbAddControlsScript.length());
+            
+            sbScript.append(sbRemoveControlsScript);
+            sbScript.append(sbUpdateControlsScript);
+            sbScript.append(sbAddControlsScript);
+            
+            return sbScript.toString();
+        }
     }
 }
