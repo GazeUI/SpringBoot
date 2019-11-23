@@ -24,16 +24,15 @@
 
 package io.gazeui.ui;
 
-import java.util.LinkedList;
-import java.util.List;
-
 public class ContainerControl extends Control {
     
-    private List<Control> controls;
+    // To generate the automatic ID for controls, we have to know when they are added.
+    // So the use of a custom control collection.
+    private ControlCollection controls;
     
-    public List<Control> getControls() {
+    public ControlCollection getControls() {
         if (this.controls == null) {
-            this.controls = new LinkedList<Control>();
+            this.controls = new ControlCollection(this);
         }
         
         return this.controls;
@@ -43,7 +42,7 @@ public class ContainerControl extends Control {
     protected ContainerControl clone() {
         ContainerControl newContainerControl = (ContainerControl)super.clone();
         
-        newContainerControl.controls = new LinkedList<Control>();
+        newContainerControl.controls = new ControlCollection(newContainerControl);
         
         for (Control control : this.getControls()) {
             newContainerControl.getControls().add(control.clone());
@@ -71,16 +70,12 @@ public class ContainerControl extends Control {
             // 1. Remove
             for (Control previousChildControlState : previousContainerControlState.getControls()) {
                 if (!this.getControls().contains(previousChildControlState.getSourceControl())) {
-                    if (previousChildControlState.getSourceControl().getId() != null) {
-                        String removeControlScript = String.format(
-                                "var ctl = document.getElementById('%s');\n" + 
-                                "ctl.remove();", previousChildControlState.getSourceControl().getId());
-                        
-                        sbRemoveControlsScript.append(removeControlScript);
-                        sbRemoveControlsScript.append('\n');
-                    } else {
-                        throw RenderException.createNonExistentIdException();
-                    }
+                    String removeControlScript = String.format(
+                            "var ctl = document.getElementById('%s');\n" + 
+                            "ctl.remove();", previousChildControlState.getSourceControl().getClientId());
+                    
+                    sbRemoveControlsScript.append(removeControlScript);
+                    sbRemoveControlsScript.append('\n');
                 }
             }
             

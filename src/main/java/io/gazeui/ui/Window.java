@@ -26,8 +26,16 @@ package io.gazeui.ui;
 
 public abstract class Window extends ContainerControl {
 
+    // The client ID must be unique per browser window because it will be used as the HTML ID attribute.
+    private int controlsCounter = 0;
+    
+    String generateAutomaticControlId() {
+        return String.format("ctl%02d", ++this.controlsCounter);
+    }
+    
     // TODO: Temporary
-    public abstract void updateUI();
+    public void updateUI() {
+    }
     
     @Override
     public Window clone() {

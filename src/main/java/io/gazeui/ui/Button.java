@@ -28,6 +28,13 @@ public class Button extends Control {
     
     private String text;
     
+    public Button() {
+    }
+    
+    public Button(String text) {
+        this.setText(text);
+    }
+    
     public String getText() {
         return this.text;
     }
@@ -42,13 +49,10 @@ public class Button extends Control {
         
         if (previousControlState == null) {
             sbRenderScript.append("var btn = document.createElement('button');\n");
+            sbRenderScript.append(String.format("btn.id = '%s';\n", this.getClientId()));
             
-            if (this.getId() != null) {
-                sbRenderScript.append(String.format("btn.id = '%s';\n", this.getId()));
-            }
-            
-            // TODO: JavaScript escape
             if (this.getText() != null && !this.getText().isEmpty()) {
+                // TODO: JavaScript escape
                 sbRenderScript.append(String.format("btn.textContent = '%s';\n", this.getText()));
             }
             
@@ -57,13 +61,9 @@ public class Button extends Control {
             Button previousButtonState = (Button)previousControlState;
             
             if (!this.getText().equals(previousButtonState.getText())) {
-                if (this.getId() != null) {
-                    sbRenderScript.append(String.format(
-                            "var btn = document.getElementById('%s');\n" + 
-                            "btn.textContent = '%s';", this.getId(), this.getText()));
-                } else {
-                    throw RenderException.createNonExistentIdException();
-                }
+                sbRenderScript.append(String.format(
+                        "var btn = document.getElementById('%s');\n" + 
+                        "btn.textContent = '%s';", this.getClientId(), this.getText()));
             }
         }
         

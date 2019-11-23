@@ -22,16 +22,19 @@
  * SOFTWARE.
  */
 
-package io.gazeui.ui;
+package io.gazeui.ui.exception;
 
-@SuppressWarnings("serial")
-public class RenderException extends RuntimeException {
+public enum ErrorMessage {
+    CONTROL_COLLECTION_MUST_HAVE_OWNER("The collection must have an owner"),
+    CONTROL_COLLECTION_ADD_SET_EXISTING_ELEMENT_USING_ITERATOR("It is not possible to add/set an existing element to the controls collection using an iterator");
     
-    static RenderException createNonExistentIdException() {
-        return new RenderException("It is not possible to update or remove controls without Id");
+    private final String message;
+    
+    private ErrorMessage(String message) {
+        this.message = message;
     }
     
-    public RenderException(String message) {
-        super(message);
+    public String getMessage() {
+        return this.message;
     }
 }
