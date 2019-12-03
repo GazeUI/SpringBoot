@@ -38,6 +38,7 @@ import io.gazeui.springboot.configuration.GazeUIConfiguration;
 import io.gazeui.ui.Window;
 
 @RestController
+// TODO: Allow to configure the base path
 @RequestMapping(path = "/some-base-path")
 public class GazeUIController {
     
@@ -82,6 +83,7 @@ public class GazeUIController {
     public String getUICreationScript(HttpSession session) throws InstantiationException, IllegalAccessException,
             IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
         
+        // TODO: Create a class that allows strongly typed access to session objects
         Window viewStateWindow = (Window)session.getAttribute("viewState");
         
         if (viewStateWindow == null) {
@@ -95,6 +97,8 @@ public class GazeUIController {
         String renderScript = viewStateWindow.getRenderScript(null);
         StringBuilder sbScript = new StringBuilder(renderScript.length() + extraTextLength);
         
+        // Here we have to use a closure to limit the scope of the render script to be executed, once the
+        // overall code will be executed as the content of a JavaScript file.
         sbScript.append("'use strict';\n");
         sbScript.append("\n");
         sbScript.append("(function() {\n");
@@ -109,6 +113,7 @@ public class GazeUIController {
         Window viewStateWindow = (Window)session.getAttribute("viewState");
         Window previousViewStateWindow = viewStateWindow.clone();
         
+        // TODO: Temporary
         viewStateWindow.updateUI();
         
         String renderScript = viewStateWindow.getRenderScript(previousViewStateWindow);
@@ -117,6 +122,7 @@ public class GazeUIController {
             final int extraTextLength = 15;
             StringBuilder sbScript = new StringBuilder(renderScript.length() + extraTextLength);
             
+            // Here is not necessary to use a closure because this code will be already executed in a limited scope.
             sbScript.append("'use strict';\n");
             sbScript.append("\n");
             sbScript.append(renderScript);

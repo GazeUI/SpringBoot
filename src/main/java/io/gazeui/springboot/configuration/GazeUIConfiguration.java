@@ -40,6 +40,8 @@ public class GazeUIConfiguration {
     
     @Autowired
     public GazeUIConfiguration(ApplicationContext applicationContext) {
+        // We expect only one bean annotated with EnableGazeUI
+        // TODO: Consider the case where there is no bean with the EnableGazeUI annotation
         String beanNameWithEnableGazeUI = applicationContext.getBeanNamesForAnnotation(EnableGazeUI.class)[0];
         EnableGazeUI enableGazeUIAnnotation = applicationContext.findAnnotationOnBean(beanNameWithEnableGazeUI, EnableGazeUI.class);
         

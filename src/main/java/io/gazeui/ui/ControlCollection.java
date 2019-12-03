@@ -30,21 +30,26 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Objects;
 import java.util.Set;
 
 import io.gazeui.ui.exception.ErrorMessage;
 
-public class ControlCollection implements List<Control> {
-    /* 
-     * The ideal collection here is one that does not allow duplicates, maintains insertion order and allows access
-     * by index.
+class ControlCollection implements List<Control> {
+    /*
+     * 1. The collection must be in the same package of Control to be possible to call the
+     *    onAddToCollection and onRemoveFromCollection methods. We think to be unnecessary to use observers
+     *    for this operation.
      * 
-     * 1. A LinkedHashSet does not allow duplicates and maintains insertion order, but Set implementations do not offer
-     *    access by index.
-     * 2. List implementations maintain insertion order and allow access by index, but do not restrict duplicate
-     *    elements.
-     * 
-     * Therefore, we decided to use List and restrict duplicate elements by ourselves.
+     * 2. The ideal collection here is one that does not allow duplicates, maintains insertion order and allows access
+     *    by index.
+     *     
+     *    2.1. A LinkedHashSet does not allow duplicates and maintains insertion order, but Set implementations
+     *         do not offer access by index.
+     *    2.2. List implementations maintain insertion order and allow access by index, but do not restrict duplicate
+     *         elements.
+     *    
+     *    Therefore, we decided to use List and restrict duplicate elements by ourselves.
      */
     
     private final ContainerControl owner;
@@ -57,11 +62,7 @@ public class ControlCollection implements List<Control> {
     }
     
     private ControlCollection(ContainerControl owner, List<Control> innerList) {
-        if (owner == null) {
-            throw new IllegalArgumentException(ErrorMessage.CONTROL_COLLECTION_MUST_HAVE_OWNER.getMessage());
-        }
-        
-        this.owner = owner;
+        this.owner = Objects.requireNonNull(owner, ErrorMessage.CONTROL_COLLECTION_MUST_HAVE_OWNER.getMessage());
         this.innerList = innerList;
     }
     

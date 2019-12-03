@@ -39,11 +39,30 @@ public abstract class Window extends ContainerControl {
     
     @Override
     public Window clone() {
+        // This method is only to make the clone method visible to the GazeUIController.
         return (Window)super.clone();
     }
     
     @Override
+    protected String creationScript() {
+        // It is not necessary to create a container for the Window, because document.body will be used as such.
+        return "";
+    }
+    
+    @Override
+    protected String selectionScript() {
+        // It is not necessary to run any selection script, because document.body can be directly accessed.
+        return "";
+    }
+    
+    @Override
+    protected String identificationToken() {
+        return "document.body";
+    }
+    
+    @Override
     public String getRenderScript(Control previousControlState) {
+        // This method is only to make the getRenderScript method visible to the GazeUIController.
         return super.getRenderScript(previousControlState);
     }
 }

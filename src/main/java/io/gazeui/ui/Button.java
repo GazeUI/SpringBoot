@@ -24,6 +24,8 @@
 
 package io.gazeui.ui;
 
+import java.util.Optional;
+
 public class Button extends Control {
     
     private String text;
@@ -44,29 +46,49 @@ public class Button extends Control {
     }
     
     @Override
+    public String toString() {
+        return String.format("(%s, Text: %s)", this.getClass().getSimpleName(), this.getText());
+    }
+    
+    @Override
     protected String getRenderScript(Control previousControlState) {
-        StringBuilder sbRenderScript = new StringBuilder();
-        
         if (previousControlState == null) {
-            sbRenderScript.append("var btn = document.createElement('button');\n");
-            sbRenderScript.append(String.format("btn.id = '%s';\n", this.getClientId()));
-            
-            if (this.getText() != null && !this.getText().isEmpty()) {
-                // TODO: JavaScript escape
-                sbRenderScript.append(String.format("btn.textContent = '%s';\n", this.getText()));
-            }
-            
-            sbRenderScript.append("document.body.appendChild(btn);");
+            return this.getCreateRenderScript();
         } else {
-            Button previousButtonState = (Button)previousControlState;
-            
-            if (!this.getText().equals(previousButtonState.getText())) {
-                sbRenderScript.append(String.format(
-                        "var btn = document.getElementById('%s');\n" + 
-                        "btn.textContent = '%s';", this.getClientId(), this.getText()));
-            }
+            return this.getUpdateRenderScript((Button)previousControlState);
+        }
+    }
+    
+    private String getCreateRenderScript() {
+        StringBuilder sbScript = new StringBuilder();
+        
+        sbScript.append(String.format("var %s = document.createElement('button');\n", this.getClientId()));
+        sbScript.append(String.format("%1$s.id = '%1$s';\n", this.getClientId()));
+        
+        if (this.getText() != null && !this.getText().isEmpty()) {
+            // TODO: JavaScript escape
+            sbScript.append(String.format("%s.textContent = '%s';\n", this.getClientId(),
+                    this.getText()));
         }
         
-        return sbRenderScript.toString();
+        return sbScript.toString();
+    }
+    
+    private String getUpdateRenderScript(Button previousControlState) {
+        StringBuilder sbScript = new StringBuilder();
+        
+        String currentText = Optional.ofNullable(this.getText()).orElse("");
+        String previousText = Optional.ofNullable(previousControlState.getText()).orElse("");
+        
+        if (!currentText.equals(previousText)) {
+            // TODO: JavaScript escape
+            sbScript.append(String.format("%s.textContent = '%s';\n", this.getClientId(), currentText));
+        }
+        
+        if (sbScript.length() > 0) {
+            sbScript.insert(0, this.selectionScript());
+        }
+        
+        return sbScript.toString();
     }
 }

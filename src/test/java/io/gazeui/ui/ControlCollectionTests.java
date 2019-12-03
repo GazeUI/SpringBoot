@@ -425,7 +425,7 @@ class ControlCollectionTests {
     }
     
     @Test
-    void listIteratorAddShouldThrowExceptionWhenAddExisting() {
+    void listIteratorAddShouldThrowsExceptionWhenAddExisting() {
         controlCollection.add(b1);
         controlCollection.add(b2);
         controlCollection.add(b3);
@@ -468,7 +468,7 @@ class ControlCollectionTests {
     }
     
     @Test
-    void listIteratorSetShouldThrowExceptionWhenSetExisting() {
+    void listIteratorSetShouldThrowsExceptionWhenSetExisting() {
         controlCollection.add(b1);
         controlCollection.add(b2);
         controlCollection.add(b3);
