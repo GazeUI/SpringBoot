@@ -51,29 +51,49 @@ public class GazeUIController {
     
     @GetMapping(path = "/ui", produces = MediaType.TEXT_HTML_VALUE)
     public String getInitialHtml() {
+        // We are using the 'response.body' property because, at Dec/2019, it has 73.94% of global usage,
+        // while the 'response.text()' method has only 36.71%. See these links for details:
+        //   [1]: https://caniuse.com/#feat=mdn-api_body_body
+        //   [2]: https://caniuse.com/#feat=mdn-api_body_text
+        
         String html =
-                "<!DOCTYPE html>\n" +
-                "<html>\n" +
-                "<head>\n" +
-                "  <meta charset='UTF-8'>\n" +
-                "  <title></title>\n" +
-                "  <script defer src='create-ui.js'></script>\n" +
-                "  <script>\n" +
-                "    function executeJavaScriptCode(code) {\n" +
-                "        return Function(code)();\n" +
-                "    }\n" +
-                "    \n" +
-                "    async function btnUpdateUI_OnClick() {\n" +
-                "        let response = await fetch('update-ui.js');\n" +
-                "        let responseText = await response.text();\n" +
-                "        \n" +
-                "        executeJavaScriptCode(responseText);\n" +
-                "    }\n" +
-                "  </script>\n" +
-                "</head>\n" +
-                "<body>\n" +
-                "  <button onclick='btnUpdateUI_OnClick()'>Update UI</button>\n" +
-                "</body>\n" +
+                "<!DOCTYPE html>\n" + 
+                "<html>\n" + 
+                "<head>\n" + 
+                "  <meta charset='UTF-8'>\n" + 
+                "  <title></title>\n" + 
+                "  <script defer src='create-ui.js'></script>\n" + 
+                "  <script>\n" + 
+                "    async function btnUpdateUI_OnClick() {\n" + 
+                "        let response = await fetch('update-ui.js');\n" + 
+                "        let responseText = await getTextFromStream(response.body);\n" + 
+                "        \n" + 
+                "        executeJavaScriptCode(responseText);\n" + 
+                "    }\n" + 
+                "    \n" + 
+                "    async function getTextFromStream(readableStream) {\n" + 
+                "        let reader = readableStream.getReader();\n" + 
+                "        let utf8Decoder = new TextDecoder();\n" + 
+                "        let nextChunk;\n" + 
+                "        \n" + 
+                "        let resultStr = '';\n" + 
+                "        \n" + 
+                "        while (!(nextChunk = await reader.read()).done) {\n" + 
+                "            let partialData = nextChunk.value;\n" + 
+                "            resultStr += utf8Decoder.decode(partialData);\n" + 
+                "        }\n" + 
+                "        \n" + 
+                "        return resultStr;\n" + 
+                "    }\n" + 
+                "    \n" + 
+                "    function executeJavaScriptCode(code) {\n" + 
+                "        return Function(code)();\n" + 
+                "    }\n" + 
+                "  </script>\n" + 
+                "</head>\n" + 
+                "<body>\n" + 
+                "  <button onclick='btnUpdateUI_OnClick()'>Update UI</button>\n" + 
+                "</body>\n" + 
                 "</html>";
         
         return html;
