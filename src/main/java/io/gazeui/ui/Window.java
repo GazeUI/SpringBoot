@@ -24,10 +24,34 @@
 
 package io.gazeui.ui;
 
+import io.gazeui.ui.exception.ErrorMessage;
+import io.gazeui.ui.exception.HtmlValidationException;
+import io.gazeui.ui.text.Strings;
+
 public abstract class Window extends ContainerControl {
 
+    private String title;
     // The client ID must be unique per browser window because it will be used as the HTML ID attribute.
     private int controlsCounter = 0;
+    
+    public Window() {
+    }
+    
+    public Window(String title) {
+        this.setTitle(title);
+    }
+    
+    public String getTitle() {
+        return this.title;
+    }
+
+    public void setTitle(String title) {
+        if (!Strings.isNullOrBlank(title)) {
+            this.title = title;
+        } else {
+            throw new HtmlValidationException(ErrorMessage.HTML_VALIDATION_TITLE_MUST_NOT_BE_EMPTY.getMessage());
+        }
+    }
     
     String generateAutomaticControlId() {
         return String.format("ctl%02d", ++this.controlsCounter);
@@ -62,7 +86,42 @@ public abstract class Window extends ContainerControl {
     
     @Override
     public String getRenderScript(Control previousControlState) {
-        // This method is only to make the getRenderScript method visible to the GazeUIController.
-        return super.getRenderScript(previousControlState);
+        if (previousControlState == null) {
+            return this.getCreateRenderScript();
+        } else {
+            return this.getUpdateRenderScript((Window)previousControlState);
+        }
+    }
+    
+    private String getCreateRenderScript() {
+        StringBuilder sbScript = new StringBuilder();
+        
+        if (Strings.isNullOrBlank(this.getTitle())) {
+            // According to the HTML 5.2 specification, the title element must contain at least one non-whitespace
+            // character. See https://www.w3.org/TR/html52/document-metadata.html#the-title-element for details.
+            this.setTitle(this.getClass().getSimpleName());
+        }
+        
+        // TODO: JavaScript escape
+        sbScript.append(String.format("document.title = '%s';\n", this.getTitle()));
+        
+        // Add the default ContainerControl script
+        sbScript.append(super.getRenderScript(null));
+        
+        return sbScript.toString();
+    }
+    
+    private String getUpdateRenderScript(Window previousControlState) {
+        StringBuilder sbScript = new StringBuilder();
+        
+        if (!this.getTitle().equals(previousControlState.getTitle())) {
+            // TODO: JavaScript escape
+            sbScript.append(String.format("document.title = '%s';\n", this.getTitle()));
+        }
+        
+        // Add the default ContainerControl script
+        sbScript.append(super.getRenderScript(previousControlState));
+        
+        return sbScript.toString();
     }
 }

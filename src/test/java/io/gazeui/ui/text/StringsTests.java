@@ -22,21 +22,36 @@
  * SOFTWARE.
  */
 
-package io.gazeui.ui.exception;
+package io.gazeui.ui.text;
 
-public enum ErrorMessage {
-    CONTROL_COLLECTION_MUST_HAVE_OWNER("The collection must have an owner"),
-    CONTROL_COLLECTION_ADD_SET_EXISTING_ELEMENT_USING_ITERATOR("It is not possible to add/set an existing element to the controls collection using an iterator"),
-    
-    HTML_VALIDATION_TITLE_MUST_NOT_BE_EMPTY("According to the HTML specification, the title element must contain at least one non-whitespace character");
-    
-    private final String message;
-    
-    private ErrorMessage(String message) {
-        this.message = message;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+class StringsTests {
+
+    @Test
+    void isNullOrBlankWhenNullShouldReturnTrue() {
+        assertTrue(Strings.isNullOrBlank(null));
     }
     
-    public String getMessage() {
-        return this.message;
+    @Test
+    void isNullOrBlankWhenEmptyShouldReturnTrue() {
+        assertTrue(Strings.isNullOrBlank(""));
+    }
+    
+    @Test
+    void isNullOrBlankWhenBlankShouldReturnTrue() {
+        assertTrue(Strings.isNullOrBlank(" "));
+        assertTrue(Strings.isNullOrBlank("     "));
+        assertTrue(Strings.isNullOrBlank("\r\n   \n   \t\r "));
+    }
+    
+    @Test
+    void isNullOrBlankWhenNonBlankShouldReturnFalse() {
+        assertFalse(Strings.isNullOrBlank("test"));
+        assertFalse(Strings.isNullOrBlank("t "));
+        assertFalse(Strings.isNullOrBlank(" t"));
+        assertFalse(Strings.isNullOrBlank("          t          "));
     }
 }

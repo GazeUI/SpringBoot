@@ -22,21 +22,23 @@
  * SOFTWARE.
  */
 
-package io.gazeui.ui.exception;
+package io.gazeui.ui.text;
 
-public enum ErrorMessage {
-    CONTROL_COLLECTION_MUST_HAVE_OWNER("The collection must have an owner"),
-    CONTROL_COLLECTION_ADD_SET_EXISTING_ELEMENT_USING_ITERATOR("It is not possible to add/set an existing element to the controls collection using an iterator"),
+public final class Strings {
     
-    HTML_VALIDATION_TITLE_MUST_NOT_BE_EMPTY("According to the HTML specification, the title element must contain at least one non-whitespace character");
-    
-    private final String message;
-    
-    private ErrorMessage(String message) {
-        this.message = message;
+    private Strings() {
+        // No instances allowed
     }
     
-    public String getMessage() {
-        return this.message;
+    /**
+     * Returns true if the string is null, empty or contains only white space characters, otherwise false.
+     * This is equivalent to the JDK 11 String#isBlank method.
+     */
+    public static boolean isNullOrBlank(String str) {
+        if (str != null) {
+            return str.chars().allMatch(Character::isWhitespace);
+        } else {
+            return true;
+        }
     }
 }

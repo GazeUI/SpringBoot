@@ -24,19 +24,10 @@
 
 package io.gazeui.ui.exception;
 
-public enum ErrorMessage {
-    CONTROL_COLLECTION_MUST_HAVE_OWNER("The collection must have an owner"),
-    CONTROL_COLLECTION_ADD_SET_EXISTING_ELEMENT_USING_ITERATOR("It is not possible to add/set an existing element to the controls collection using an iterator"),
+@SuppressWarnings("serial")
+public class HtmlValidationException extends RuntimeException {
     
-    HTML_VALIDATION_TITLE_MUST_NOT_BE_EMPTY("According to the HTML specification, the title element must contain at least one non-whitespace character");
-    
-    private final String message;
-    
-    private ErrorMessage(String message) {
-        this.message = message;
-    }
-    
-    public String getMessage() {
-        return this.message;
+    public HtmlValidationException(String message) {
+        super(message);
     }
 }

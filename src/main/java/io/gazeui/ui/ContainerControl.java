@@ -180,7 +180,7 @@ public class ContainerControl extends Control {
                     Control previousChildControlState = previousChildControlsMap.get(childControl.getClientId());
                     String updateChildControlScript = childControl.getRenderScript(previousChildControlState);
                     
-                    if (!updateChildControlScript.equals("")) {
+                    if (!updateChildControlScript.isEmpty()) {
                         sbUpdateChildControlsScript.append(updateChildControlScript);
                         childControlIdentified = true;
                     }

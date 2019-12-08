@@ -51,10 +51,37 @@ public class GazeUIController {
     
     @GetMapping(path = "/ui", produces = MediaType.TEXT_HTML_VALUE)
     public String getInitialHtml() {
-        // We are using the 'response.body' property because, at Dec/2019, it has 73.94% of global usage,
-        // while the 'response.text()' method has only 36.71%. See these links for details:
-        //   [1]: https://caniuse.com/#feat=mdn-api_body_body
-        //   [2]: https://caniuse.com/#feat=mdn-api_body_text
+        // 1. Regarding the title tag, The HTML 5.2 specification says¹:
+        // 
+        //    1.1. If the document is an iframe srcdoc document or if title information is available from a
+        //         higher-level protocol: Zero or more elements of metadata content, of which no more than one is a
+        //         title element and no more than one is a base element.
+        //         Otherwise: One or more elements of metadata content, of which exactly one is a title element and no
+        //         more than one is a base element.
+        //    1.2. The title element is a required child in most situations, but when a higher-level protocol provides
+        //         title information, e.g., in the Subject line of an e-mail when HTML is used as an e-mail authoring
+        //         format, the title element can be omitted.
+        //    1.3. If it’s reasonable for the Document to have no title, then the title element is probably not
+        //         required. See the head element’s content model for a description of when the element is required.
+        //    
+        //    Although it is not so clear to us if according to the specification the title is required, we are
+        //    considering it required because the W3C Validator will give an error if no title tag is found.
+        //    Beyond that, the specification enforces that the title element must contain at least one non-whitespace
+        //    character². One solution to this is to deliver upfront the title content in the HTML below, but to
+        //    achieve this we would have to instantiate the main window class (a possible heavy operation) here
+        //    in this method to get its title, and this could result in a high waiting time for the user get any
+        //    content. Although this HTML will give an error when checked by the W3C Validator regarding the title
+        //    be empty, we are favoring performance.
+        //    
+        //      [1]: https://www.w3.org/TR/html52/document-metadata.html#document-metadata
+        //      [2]: https://www.w3.org/TR/html52/document-metadata.html#the-title-element
+        //      [3]: https://stackoverflow.com/a/28688879/2160765
+        // 
+        // 2. We are using the 'response.body' property because, at Dec/2019, it has 73.94% of global usage¹, while the
+        //    'response.text()' method has only 36.71%².
+        // 
+        //      [1]: https://caniuse.com/#feat=mdn-api_body_body
+        //      [2]: https://caniuse.com/#feat=mdn-api_body_text
         
         String html =
                 "<!DOCTYPE html>\n" + 
