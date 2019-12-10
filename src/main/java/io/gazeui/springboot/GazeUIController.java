@@ -77,11 +77,18 @@ public class GazeUIController {
         //      [2]: https://www.w3.org/TR/html52/document-metadata.html#the-title-element
         //      [3]: https://stackoverflow.com/a/28688879/2160765
         // 
-        // 2. We are using the 'response.body' property because, at Dec/2019, it has 73.94% of global usage¹, while the
+        // 2. The defer attribute allows the script to be executed after the document has been parsed.
+        //    This is necessary because the page contents must be available in order to the script be correctly
+        //    executed.
+        // 
+        // 3. We are using the 'response.body' property because, at Dec/2019, it has 73.94% of global usage¹, while the
         //    'response.text()' method has only 36.71%².
         // 
         //      [1]: https://caniuse.com/#feat=mdn-api_body_body
         //      [2]: https://caniuse.com/#feat=mdn-api_body_text
+        // 
+        // 4. According to the MDN website, you should never use 'eval()', but 'window.Function()' instead.
+        //    See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval for details.
         
         String html =
                 "<!DOCTYPE html>\n" + 

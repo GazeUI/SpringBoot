@@ -156,8 +156,10 @@ public class ContainerControl extends Control {
             boolean previousLoopChildControlIdentified = false;
             
             // Here we are iterating in reverse order to make possible use the Node.insertBefore() DOM method.
-            // At 12/2019, the ChildNode.after() method is marked experimental in the MDN website:
-            // https://developer.mozilla.org/en-US/docs/Web/API/ChildNode/after
+            // At 12/2019, the ChildNode.after() method is marked experimental in the MDN website and is not
+            // supported by Safari:
+            //   [1]: https://developer.mozilla.org/en-US/docs/Web/API/ChildNode/after
+            //   [2]: https://caniuse.com/#feat=mdn-api_childnode_after
             while (reverseListIterator.hasPrevious()) {
                 Control childControl = reverseListIterator.previous();
                 // If a variable pointing to the control was already created

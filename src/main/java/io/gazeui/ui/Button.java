@@ -65,6 +65,15 @@ public class Button extends Control {
         sbScript.append(String.format("var %s = document.createElement('button');\n", this.getClientId()));
         sbScript.append(String.format("%1$s.id = '%1$s';\n", this.getClientId()));
         
+        // According to the MDN website¹:
+        //
+        // There is still a security risk whenever you use innerHTML to set strings over which you have no
+        // control [...]. For that reason, it is recommended that you do not use innerHTML when inserting plain text;
+        // instead, use Node.textContent. This doesn't parse the passed content as HTML, but instead inserts it as
+        // raw text.
+        // 
+        //   [1]: https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML
+        
         if (this.getText() != null && !this.getText().isEmpty()) {
             // TODO: JavaScript escape
             sbScript.append(String.format("%s.textContent = '%s';\n", this.getClientId(),
