@@ -298,6 +298,102 @@
         <td align="center">4</td>
         <td align="center">98.74%</td>
     </tr>
+    <tr>
+        <td align="center">JSON .stringify</td>
+        <td align="center">8</td>
+        <td align="center">12</td>
+        <td align="center">3.5</td>
+        <td align="center">4</td>
+        <td align="center">4</td>
+        <td align="center">11.5</td>
+        <td align="center">?</td>
+        <td align="center">?</td>
+        <td align="center">12</td>
+        <td align="center">78</td>
+        <td align="center">68</td>
+        <td align="center">4</td>
+        <td align="center">84.04%</td>
+    </tr>
+    <tr>
+        <td align="center">event .target</td>
+        <td align="center">?</td>
+        <td align="center">12</td>
+        <td align="center">?</td>
+        <td align="center">?</td>
+        <td align="center">?</td>
+        <td align="center">?</td>
+        <td align="center">?</td>
+        <td align="center">?</td>
+        <td align="center">?</td>
+        <td align="center">78</td>
+        <td align="center">68</td>
+        <td align="center">?</td>
+        <td align="center">69.63%</td>
+    </tr>
+    <tr>
+        <td align="center">event .currentTarget</td>
+        <td align="center">9</td>
+        <td align="center">12</td>
+        <td align="center">?</td>
+        <td align="center">?</td>
+        <td align="center">10</td>
+        <td align="center">?</td>
+        <td align="center">10</td>
+        <td align="center">?</td>
+        <td align="center">?</td>
+        <td align="center">78</td>
+        <td align="center">68</td>
+        <td align="center">?</td>
+        <td align="center">80.43%</td>
+    </tr>
+    <tr>
+        <td align="center">event .stopImmediatePropagation()</td>
+        <td align="center">9</td>
+        <td align="center">12</td>
+        <td align="center">10</td>
+        <td align="center">6</td>
+        <td align="center">5</td>
+        <td align="center">15</td>
+        <td align="center">5</td>
+        <td align="center">?</td>
+        <td align="center">46</td>
+        <td align="center">78</td>
+        <td align="center">68</td>
+        <td align="center">4</td>
+        <td align="center">93.71%</td>
+    </tr>
+    <tr>
+        <td align="center">addEventListener()</td>
+        <td align="center">9</td>
+        <td align="center">12</td>
+        <td align="center">7</td>
+        <td align="center">4</td>
+        <td align="center">3.1</td>
+        <td align="center">10</td>
+        <td align="center">3.2</td>
+        <td align="center">2.1</td>
+        <td align="center">12</td>
+        <td align="center">78</td>
+        <td align="center">68</td>
+        <td align="center">4</td>
+        <td align="center">98.74%</td>
+    </tr>
+    <tr>
+        <td align="center">removeEventListener()</td>
+        <td align="center">9</td>
+        <td align="center">12</td>
+        <td align="center">2</td>
+        <td align="center">4</td>
+        <td align="center">3.1</td>
+        <td align="center">10</td>
+        <td align="center">3.2</td>
+        <td align="center">2.1</td>
+        <td align="center">12</td>
+        <td align="center">78</td>
+        <td align="center">68</td>
+        <td align="center">4</td>
+        <td align="center">94.07%</td>
+    </tr>
 </tbody>
 <tfoot>
     <tr>

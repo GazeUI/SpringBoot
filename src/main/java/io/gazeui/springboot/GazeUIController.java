@@ -31,10 +31,13 @@ import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.gazeui.springboot.configuration.GazeUIConfiguration;
+import io.gazeui.springboot.http.MediaTypeExtensions;
 import io.gazeui.ui.Window;
 
 @RestController
@@ -81,14 +84,29 @@ public class GazeUIController {
         //    This is necessary because the page contents must be available in order to the script be correctly
         //    executed.
         // 
-        // 3. We are using the 'response.body' property because, at Dec/2019, it has 73.94% of global usage¹, while the
+        // 3. The 'no-store' cache mode bypass the cache completely.
+        // 
+        // 4. We are using the 'response.body' property because, at Dec/2019, it has 73.94% of global usage¹, while the
         //    'response.text()' method has only 36.71%².
         // 
         //      [1]: https://caniuse.com/#feat=mdn-api_body_body
         //      [2]: https://caniuse.com/#feat=mdn-api_body_text
         // 
-        // 4. According to the MDN website, you should never use 'eval()', but 'window.Function()' instead.
+        // 5. According to the MDN website, you should never use 'eval()', but 'window.Function()' instead.
         //    See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval for details.
+        // 
+        // 6. We have to observe two special cases when dealing with event handlers and nested controls:
+        // 
+        //    6.1. If there is one ancestor control with an event handler and one descendant without it,
+        //         the event will be fired on the ancestor control if the descendant control is stimulated.
+        //    6.2. If both the ancestor and descendant controls have event handlers, the event will be fired
+        //         on both controls when the descendant control is stimulated.
+        //    
+        //    We deal with these two special cases checking if 'target' and 'currentTarget' are the same.
+        //    We also use 'stopImmediatePropagation' just to certify that no other events will run for the same action.
+        //    See the following link for more detail about event order:
+        //    
+        //      [1]: https://www.quirksmode.org/js/events_order.html
         
         String html =
                 "<!DOCTYPE html>\n" + 
@@ -98,8 +116,22 @@ public class GazeUIController {
                 "  <title></title>\n" + 
                 "  <script defer src='create-ui.js'></script>\n" + 
                 "  <script>\n" + 
-                "    async function btnUpdateUI_OnClick() {\n" + 
-                "        let response = await fetch('update-ui.js');\n" + 
+                "    async function processServerUIEvent(controlId, eventName) {\n" + 
+                "        let eventInfo = {\n" + 
+                "            controlId: controlId,\n" + 
+                "            eventName: eventName\n" + 
+                "        };\n" + 
+                "        \n" + 
+                "        let fetchOptions = {\n" + 
+                "            method: 'POST',\n" + 
+                "            cache: 'no-store',\n" + 
+                "            headers: {\n" + 
+                "                'Content-Type': 'application/json'\n" + 
+                "            },\n" + 
+                "            body: JSON.stringify(eventInfo)\n" + 
+                "        };\n" + 
+                "        \n" + 
+                "        let response = await fetch('process-server-ui-event', fetchOptions);\n" + 
                 "        let responseText = await getTextFromStream(response.body);\n" + 
                 "        \n" + 
                 "        executeJavaScriptCode(responseText);\n" + 
@@ -123,17 +155,23 @@ public class GazeUIController {
                 "    function executeJavaScriptCode(code) {\n" + 
                 "        return Function(code)();\n" + 
                 "    }\n" + 
+                "    \n" + 
+                "    async function onClickHandler(mouseEvent) {\n" + 
+                "        if (mouseEvent.target == mouseEvent.currentTarget) {\n" + 
+                "            mouseEvent.stopImmediatePropagation();\n" + 
+                "            await processServerUIEvent(mouseEvent.target.id, 'Click');\n" + 
+                "        }\n" + 
+                "    }\n" + 
                 "  </script>\n" + 
                 "</head>\n" + 
                 "<body>\n" + 
-                "  <button onclick='btnUpdateUI_OnClick()'>Update UI</button>\n" + 
                 "</body>\n" + 
                 "</html>";
         
         return html;
     }
     
-    @GetMapping(path = "/create-ui.js", produces = "text/javascript")
+    @GetMapping(path = "/create-ui.js", produces = MediaTypeExtensions.APPLICATION_JAVASCRIPT_VALUE)
     public String getUICreationScript(HttpSession session) throws InstantiationException, IllegalAccessException,
             IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
         
@@ -162,13 +200,16 @@ public class GazeUIController {
         return sbScript.toString();
     }
     
-    @GetMapping(path = "/update-ui.js", produces = "text/javascript")
-    public String getUIUpdateScript(HttpSession session) {
+    @PostMapping(
+            path = "/process-server-ui-event",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaTypeExtensions.APPLICATION_JAVASCRIPT_VALUE)
+    public String processServerUIEvent(@RequestBody ServerUIEventInfo serverUIEventInfo, HttpSession session) {
+        
         Window viewStateWindow = (Window)session.getAttribute("viewState");
         Window previousViewStateWindow = viewStateWindow.clone();
         
-        // TODO: Temporary
-        viewStateWindow.updateUI();
+        viewStateWindow.processUIEvent(serverUIEventInfo.getControlId(), serverUIEventInfo.getEventName());
         
         String renderScript = viewStateWindow.getRenderScript(previousViewStateWindow);
         

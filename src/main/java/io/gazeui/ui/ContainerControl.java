@@ -66,6 +66,7 @@ public class ContainerControl extends Control {
         // The cloned collection will not suffer any operation, so it is not necessary to be a ControlCollection
         clonedContainerControl.controls = new ArrayList<Control>(this.getControls().size());
         
+        // Doing a deep copy of child controls
         for (Control control : this.getControls()) {
             clonedContainerControl.getControls().add(control.clone());
         }

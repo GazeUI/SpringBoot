@@ -119,6 +119,15 @@ public abstract class Control implements Cloneable {
         }
     }
     
+    @Override
+    public String toString() {
+        if (this.getClientId() != null) {
+            return String.format("%s, Id: '%s'", this.getClass().getSimpleName(), this.getClientId());
+        } else {
+            return this.getClass().getSimpleName() + "@" + Integer.toHexString(this.hashCode());
+        }
+    }
+    
     /**
      * A script that can be run to find this control on the client side. After running this script, it is possible
      * to use the token returned by the {@link #identificationToken()} method to reach the control.

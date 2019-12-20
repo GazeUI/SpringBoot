@@ -22,12 +22,18 @@
  * SOFTWARE.
  */
 
-package io.gazeui.ui.exception;
+package io.gazeui.springboot;
 
-@SuppressWarnings("serial")
-public class HtmlValidationException extends RuntimeException {
+class ServerUIEventInfo {
     
-    public HtmlValidationException(String message) {
-        super(message);
+    private String controlId;
+    private String eventName;
+    
+    public String getControlId() {
+        return this.controlId;
+    }
+    
+    public String getEventName() {
+        return this.eventName;
     }
 }

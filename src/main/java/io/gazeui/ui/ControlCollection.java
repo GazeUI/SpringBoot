@@ -33,8 +33,6 @@ import java.util.ListIterator;
 import java.util.Objects;
 import java.util.Set;
 
-import io.gazeui.ui.exception.ErrorMessage;
-
 class ControlCollection implements List<Control> {
     /*
      * 1. The collection must be in the same package of Control to be possible to call the

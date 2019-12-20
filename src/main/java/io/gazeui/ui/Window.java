@@ -24,8 +24,11 @@
 
 package io.gazeui.ui;
 
-import io.gazeui.ui.exception.ErrorMessage;
-import io.gazeui.ui.exception.HtmlValidationException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+
 import io.gazeui.ui.text.Strings;
 
 public abstract class Window extends ContainerControl {
@@ -49,7 +52,7 @@ public abstract class Window extends ContainerControl {
         if (!Strings.isNullOrBlank(title)) {
             this.title = title;
         } else {
-            throw new HtmlValidationException(ErrorMessage.HTML_VALIDATION_TITLE_MUST_NOT_BE_EMPTY.getMessage());
+            throw new IllegalArgumentException(ErrorMessage.HTML_VALIDATION_TITLE_MUST_NOT_BE_EMPTY.getMessage());
         }
     }
     
@@ -57,14 +60,18 @@ public abstract class Window extends ContainerControl {
         return String.format("ctl%02d", ++this.controlsCounter);
     }
     
-    // TODO: Temporary
-    public void updateUI() {
-    }
-    
     @Override
     public Window clone() {
         // This method is only to make the clone method visible to the GazeUIController.
         return (Window)super.clone();
+    }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(super.toString());
+        sb.append(String.format(", Title: '%s'", Optional.ofNullable(this.getTitle()).orElse("")));
+        
+        return sb.toString();
     }
     
     @Override
@@ -123,5 +130,45 @@ public abstract class Window extends ContainerControl {
         sbScript.append(super.getRenderScript(previousControlState));
         
         return sbScript.toString();
+    }
+    
+    public void processUIEvent(String controlId, String eventName) {
+        Control control = this.getDescendantControlById(this, controlId);
+        
+        if (control != null) {
+            String processEventMethodName = String.format("processOn%sEvent", eventName);
+            
+            try {
+                Method method = control.getClass().getDeclaredMethod(processEventMethodName);
+                method.invoke(control);
+            } catch (NoSuchMethodException | SecurityException | IllegalAccessException |
+                    IllegalArgumentException | InvocationTargetException ex) {
+                String errorMessage = String.format(ErrorMessage.COULD_NOT_PROCESS_EVENT.getMessage(),
+                        eventName, control.toString());
+                
+                throw new GazeUIException(errorMessage, ex);
+            }
+        } else {
+            String errorMessage = String.format(ErrorMessage.COULD_NOT_PROCESS_EVENT_CONTROL_ID_NOT_FOUND.getMessage(),
+                    eventName, controlId);
+            
+            throw new NoSuchElementException(errorMessage);
+        }
+    }
+    
+    private Control getDescendantControlById(ContainerControl ancestor, String controlId) {
+        for (Control childControl : ancestor.getControls()) {
+            if (childControl.getClientId().equals(controlId)) {
+                return childControl;
+            } else if (childControl instanceof ContainerControl) {
+                Control foundControl = this.getDescendantControlById((ContainerControl)childControl, controlId);
+                
+                if (foundControl != null) {
+                    return foundControl;
+                }
+            }
+        }
+        
+        return null;
     }
 }
