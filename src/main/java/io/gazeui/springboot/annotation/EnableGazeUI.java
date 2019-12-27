@@ -32,7 +32,7 @@ import java.lang.annotation.Target;
 
 import org.springframework.context.annotation.Import;
 
-import io.gazeui.springboot.configuration.GazeUIConfiguration;
+import io.gazeui.springboot.GazeUIConfiguration;
 import io.gazeui.ui.Window;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -42,4 +42,6 @@ import io.gazeui.ui.Window;
 public @interface EnableGazeUI {
     
     Class<? extends Window> mainWindowClass();
+    
+    String basePath() default "";
 }
