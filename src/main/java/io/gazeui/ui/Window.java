@@ -154,9 +154,11 @@ public abstract class Window extends ContainerControl {
             try {
                 Method method = control.getClass().getDeclaredMethod(processEventMethodName);
                 method.invoke(control);
-            } catch (NoSuchMethodException | SecurityException | IllegalAccessException |
-                    IllegalArgumentException | InvocationTargetException ex) {
-                String errorMessage = String.format(ErrorMessage.COULD_NOT_PROCESS_EVENT.getMessage(),
+            } catch (InvocationTargetException ex) {
+                // Rethrow the any possible exception thrown by the Window subclass constructor
+                throw new RuntimeException(ex.getCause());
+            } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException ex) {
+                String errorMessage = String.format(ErrorMessage.UNEXPECTED_ERROR_PROCESSING_EVENT.getMessage(),
                         eventName, control.toString());
                 
                 throw new GazeUIException(errorMessage, ex);
