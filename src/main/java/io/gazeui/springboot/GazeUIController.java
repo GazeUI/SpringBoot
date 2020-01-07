@@ -24,10 +24,6 @@
 
 package io.gazeui.springboot;
 
-import java.lang.reflect.InvocationTargetException;
-
-import javax.servlet.http.HttpSession;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,8 +33,14 @@ import io.gazeui.ui.Window;
 @RestController
 public class GazeUIController {
     
+    private final Window viewStateWindow;
     private GazeUIConfiguration gazeUIConfiguration;
     private String initialHtml;
+    
+    @Autowired
+    public GazeUIController(Window viewStateWindow) {
+        this.viewStateWindow = viewStateWindow;
+    }
     
     @Autowired
     public void setGazeUIConfiguration(GazeUIConfiguration gazeUIConfiguration) {
@@ -181,21 +183,9 @@ public class GazeUIController {
     }
     
     //@GetMapping(path = "/create-initial-ui", produces = MediaTypeExtensions.APPLICATION_JAVASCRIPT_VALUE)
-    public String getInitialUICreationScript(HttpSession session) throws InstantiationException, IllegalAccessException,
-            IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-        
-        // TODO: Create a class that allows strongly typed access to session objects
-        Window viewStateWindow = (Window)session.getAttribute("viewState");
-        
-        if (viewStateWindow == null) {
-            Class<? extends Window> mainWindowClass = this.gazeUIConfiguration.getMainWindowClass();
-            viewStateWindow = mainWindowClass.getDeclaredConstructor().newInstance();
-            
-            session.setAttribute("viewState", viewStateWindow);
-        }
-        
+    public String getInitialUICreationScript() {
         final int extraTextLength = 34;
-        String renderScript = viewStateWindow.getRenderScript(null);
+        String renderScript = this.viewStateWindow.getRenderScript(null);
         StringBuilder sbScript = new StringBuilder(renderScript.length() + extraTextLength);
         
         // Here we have to use a closure to limit the scope of the render script to be executed, once the
@@ -213,14 +203,12 @@ public class GazeUIController {
     //        path = "/process-server-ui-event",
     //        consumes = MediaType.APPLICATION_JSON_VALUE,
     //        produces = MediaTypeExtensions.APPLICATION_JAVASCRIPT_VALUE)
-    public String processServerUIEvent(@RequestBody ServerUIEventInfo serverUIEventInfo, HttpSession session) {
+    public String processServerUIEvent(@RequestBody ServerUIEventInfo serverUIEventInfo) {
+        Window previousViewStateWindow = this.viewStateWindow.clone();
         
-        Window viewStateWindow = (Window)session.getAttribute("viewState");
-        Window previousViewStateWindow = viewStateWindow.clone();
+        this.viewStateWindow.processUIEvent(serverUIEventInfo.getControlId(), serverUIEventInfo.getEventName());
         
-        viewStateWindow.processUIEvent(serverUIEventInfo.getControlId(), serverUIEventInfo.getEventName());
-        
-        String renderScript = viewStateWindow.getRenderScript(previousViewStateWindow);
+        String renderScript = this.viewStateWindow.getRenderScript(previousViewStateWindow);
         
         if (!renderScript.isEmpty()) {
             final int extraTextLength = 15;

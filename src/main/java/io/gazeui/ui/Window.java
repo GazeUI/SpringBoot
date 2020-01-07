@@ -33,6 +33,19 @@ import io.gazeui.ui.text.Strings;
 
 public abstract class Window extends ContainerControl {
 
+    public static Window createInstance(Class<? extends Window> windowSubclass) {
+        try {
+            Window viewStateWindow = windowSubclass.getDeclaredConstructor().newInstance();
+            return viewStateWindow;
+        } catch (InvocationTargetException ex) {
+            // Rethrow the any possible exception thrown by the Window subclass constructor
+            throw new RuntimeException(ex.getCause());
+        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+                | NoSuchMethodException | SecurityException ex) {
+            throw new GazeUIException(ErrorMessage.UNEXPECTED_ERROR_CREATING_MAIN_WINDOW.getMessage(), ex);
+        }
+    }
+    
     private String title;
     // The client ID must be unique per browser window because it will be used as the HTML ID attribute.
     private int controlsCounter = 0;

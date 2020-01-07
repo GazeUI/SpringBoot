@@ -26,14 +26,14 @@ package io.gazeui.springboot;
 
 import java.lang.reflect.Method;
 
-import javax.servlet.http.HttpSession;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.context.annotation.SessionScope;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
@@ -81,10 +81,6 @@ public class GazeUIConfiguration {
         }
     }
     
-    public Class<? extends Window> getMainWindowClass() {
-        return this.enableGazeUIAnnotation.mainWindowClass();
-    }
-    
     public String getHtmlBaseUrl() {
         return this.htmlBaseUrl;
     }
@@ -97,10 +93,9 @@ public class GazeUIConfiguration {
         
         try {
             getInitialHtmlMethod = GazeUIController.class.getDeclaredMethod("getInitialHtml");
-            getInitialUICreationScriptMethod = GazeUIController.class.getDeclaredMethod(
-                    "getInitialUICreationScript", HttpSession.class);
+            getInitialUICreationScriptMethod = GazeUIController.class.getDeclaredMethod("getInitialUICreationScript");
             processServerUIEventMethod = GazeUIController.class.getDeclaredMethod(
-                    "processServerUIEvent", ServerUIEventInfo.class, HttpSession.class);
+                    "processServerUIEvent", ServerUIEventInfo.class);
         } catch (NoSuchMethodException | SecurityException ex) {
             // Never happens, once the methods will always be declared
             throw new RuntimeException(ex);
@@ -128,5 +123,11 @@ public class GazeUIConfiguration {
         mapping.registerMapping(getInitialHtmlMappingInfo, gazeUIController, getInitialHtmlMethod);
         mapping.registerMapping(getInitialUICreationScriptMappingInfo, gazeUIController, getInitialUICreationScriptMethod);
         mapping.registerMapping(processServerUIEventMappingInfo, gazeUIController, processServerUIEventMethod);
+    }
+    
+    @Bean
+    @SessionScope
+    public Window mainWindow() {
+        return Window.createInstance(this.enableGazeUIAnnotation.mainWindowClass());
     }
 }
