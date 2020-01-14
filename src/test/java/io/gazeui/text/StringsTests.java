@@ -22,12 +22,36 @@
  * SOFTWARE.
  */
 
-package io.gazeui.ui.event;
+package io.gazeui.text;
 
-import java.util.EventListener;
+import static org.junit.jupiter.api.Assertions.*;
 
-@FunctionalInterface
-public interface EventHandler<T extends EventArgs> extends EventListener {
+import org.junit.jupiter.api.Test;
+
+class StringsTests {
+
+    @Test
+    void isNullOrBlankWhenNullShouldReturnTrue() {
+        assertTrue(Strings.isNullOrBlank(null));
+    }
     
-    public void handle(T eventArgs);
+    @Test
+    void isNullOrBlankWhenEmptyShouldReturnTrue() {
+        assertTrue(Strings.isNullOrBlank(""));
+    }
+    
+    @Test
+    void isNullOrBlankWhenBlankShouldReturnTrue() {
+        assertTrue(Strings.isNullOrBlank(" "));
+        assertTrue(Strings.isNullOrBlank("     "));
+        assertTrue(Strings.isNullOrBlank("\r\n   \n   \t\r "));
+    }
+    
+    @Test
+    void isNullOrBlankWhenNonBlankShouldReturnFalse() {
+        assertFalse(Strings.isNullOrBlank("test"));
+        assertFalse(Strings.isNullOrBlank("t "));
+        assertFalse(Strings.isNullOrBlank(" t"));
+        assertFalse(Strings.isNullOrBlank("          t          "));
+    }
 }

@@ -22,14 +22,14 @@
  * SOFTWARE.
  */
 
-package io.gazeui.ui;
+package io.gazeui;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import io.gazeui.ui.text.Strings;
+import io.gazeui.text.Strings;
 
 public abstract class Window extends ContainerControl {
 

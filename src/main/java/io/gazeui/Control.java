@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package io.gazeui.ui;
+package io.gazeui;
 
 public abstract class Control implements Cloneable {
     

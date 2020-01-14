@@ -22,36 +22,21 @@
  * SOFTWARE.
  */
 
-package io.gazeui.ui.text;
+package io.gazeui.event;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.EventObject;
 
-import org.junit.jupiter.api.Test;
+import io.gazeui.Control;
 
-class StringsTests {
+@SuppressWarnings("serial")
+public class EventArgs extends EventObject {
 
-    @Test
-    void isNullOrBlankWhenNullShouldReturnTrue() {
-        assertTrue(Strings.isNullOrBlank(null));
+    public EventArgs(Control source) {
+        super(source);
     }
     
-    @Test
-    void isNullOrBlankWhenEmptyShouldReturnTrue() {
-        assertTrue(Strings.isNullOrBlank(""));
-    }
-    
-    @Test
-    void isNullOrBlankWhenBlankShouldReturnTrue() {
-        assertTrue(Strings.isNullOrBlank(" "));
-        assertTrue(Strings.isNullOrBlank("     "));
-        assertTrue(Strings.isNullOrBlank("\r\n   \n   \t\r "));
-    }
-    
-    @Test
-    void isNullOrBlankWhenNonBlankShouldReturnFalse() {
-        assertFalse(Strings.isNullOrBlank("test"));
-        assertFalse(Strings.isNullOrBlank("t "));
-        assertFalse(Strings.isNullOrBlank(" t"));
-        assertFalse(Strings.isNullOrBlank("          t          "));
+    @Override
+    public Control getSource() {
+        return (Control)super.getSource();
     }
 }

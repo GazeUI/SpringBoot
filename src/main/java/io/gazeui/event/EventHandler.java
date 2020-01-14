@@ -22,21 +22,12 @@
  * SOFTWARE.
  */
 
-package io.gazeui.ui.event;
+package io.gazeui.event;
 
-import java.util.EventObject;
+import java.util.EventListener;
 
-import io.gazeui.ui.Control;
-
-@SuppressWarnings("serial")
-public class EventArgs extends EventObject {
-
-    public EventArgs(Control source) {
-        super(source);
-    }
+@FunctionalInterface
+public interface EventHandler<T extends EventArgs> extends EventListener {
     
-    @Override
-    public Control getSource() {
-        return (Control)super.getSource();
-    }
+    public void handle(T eventArgs);
 }

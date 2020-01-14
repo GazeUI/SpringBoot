@@ -33,7 +33,7 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.Import;
 
 import io.gazeui.springboot.configuration.WebConfiguration;
-import io.gazeui.ui.Window;
+import io.gazeui.Window;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)

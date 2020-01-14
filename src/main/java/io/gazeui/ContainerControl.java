@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package io.gazeui.ui;
+package io.gazeui;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -32,7 +32,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.function.Function;
 
-import io.gazeui.ui.collections.Lists;
+import io.gazeui.collections.Lists;
 
 public class ContainerControl extends Control {
 

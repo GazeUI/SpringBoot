@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.gazeui.springboot.configuration.PropertiesConfiguration;
 import io.gazeui.springboot.configuration.WebConfiguration;
 import io.gazeui.springboot.http.MediaTypeExtensions;
-import io.gazeui.ui.Window;
+import io.gazeui.Window;
 
 @RestController
 @RequestMapping(path = "${" + PropertiesConfiguration.PROPERTY_KEY_GAZEUI_BASE_PATH + "}")

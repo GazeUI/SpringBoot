@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package io.gazeui.ui;
+package io.gazeui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

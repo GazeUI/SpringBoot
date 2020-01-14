@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package io.gazeui.ui.collections;
+package io.gazeui.collections;
 
 import java.util.ArrayList;
 import java.util.Comparator;

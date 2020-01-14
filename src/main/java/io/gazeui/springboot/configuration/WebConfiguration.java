@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.context.annotation.SessionScope;
 
 import io.gazeui.springboot.annotation.EnableGazeUI;
-import io.gazeui.ui.Window;
+import io.gazeui.Window;
 
 @Configuration
 @ComponentScan("io.gazeui.springboot")

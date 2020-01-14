@@ -22,27 +22,79 @@
  * SOFTWARE.
  */
 
-package io.gazeui.ui;
+package io.gazeui;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 
-public class Label extends Control {
+import io.gazeui.event.EventArgs;
+import io.gazeui.event.EventHandler;
+
+public class Button extends Control {
     
     private String text;
+    private List<EventHandler<EventArgs>> clickHandlers;
     
-    public Label() {
+    public Button() {
     }
     
-    public Label(String text) {
+    public Button(String text) {
         this.setText(text);
     }
     
     public String getText() {
         return this.text;
     }
-
+    
     public void setText(String text) {
         this.text = text;
+    }
+    
+    public void addOnClickHandler(EventHandler<EventArgs> onClickHandler) {
+        if (!this.getClickHandlers().contains(onClickHandler)) {
+            this.getClickHandlers().add(onClickHandler);
+        }
+    }
+    
+    public void removeOnClickHandler(EventHandler<EventArgs> onClickHandler) {
+        this.getClickHandlers().remove(onClickHandler);
+    }
+    
+    void processOnClickEvent() {
+        EventArgs eventArgs = new EventArgs(this);
+        
+        for (EventHandler<EventArgs> clickHandler : this.getClickHandlers()) {
+            clickHandler.handle(eventArgs);
+        }
+    }
+    
+    private List<EventHandler<EventArgs>> getClickHandlers() {
+        if (this.clickHandlers == null) {
+            this.clickHandlers = new LinkedList<>();
+        }
+        
+        return this.clickHandlers;
+    }
+    
+    @Override
+    protected Button clone() {
+        Button clonedButton = (Button)super.clone();
+        
+        if (this.clickHandlers != null) {
+            // Doing a shallow copy of the list of handlers
+            clonedButton.clickHandlers = new LinkedList<>(this.clickHandlers);
+        }
+        
+        return clonedButton;
+    }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(super.toString());
+        sb.append(String.format(", Text: '%s'", Optional.ofNullable(this.getText()).orElse("")));
+        
+        return sb.toString();
     }
     
     @Override
@@ -50,14 +102,14 @@ public class Label extends Control {
         if (previousControlState == null) {
             return this.getCreateRenderScript();
         } else {
-            return this.getUpdateRenderScript((Label)previousControlState);
+            return this.getUpdateRenderScript((Button)previousControlState);
         }
     }
     
     private String getCreateRenderScript() {
         StringBuilder sbScript = new StringBuilder();
         
-        sbScript.append(String.format("var %s = document.createElement('span');\n", this.getClientId()));
+        sbScript.append(String.format("var %s = document.createElement('button');\n", this.getClientId()));
         sbScript.append(String.format("%1$s.id = '%1$s';\n", this.getClientId()));
         
         // According to the MDN website¹:
@@ -75,10 +127,20 @@ public class Label extends Control {
                     this.getText()));
         }
         
+        // Here we are accessing the variable directly to avoid the unnecessary creation of the collection
+        // when there are no handlers.
+        if (this.clickHandlers != null && !this.clickHandlers.isEmpty()) {
+            sbScript.append(String.format("%s.addEventListener('click', onClickHandler, {\n", this.getClientId()));
+            sbScript.append(
+                "    capture: false,\n" +
+                "    passive: true\n" +
+                "});\n");
+        }
+        
         return sbScript.toString();
     }
     
-    private String getUpdateRenderScript(Label previousControlState) {
+    private String getUpdateRenderScript(Button previousControlState) {
         StringBuilder sbScript = new StringBuilder();
         
         String currentText = Optional.ofNullable(this.getText()).orElse("");
@@ -87,6 +149,21 @@ public class Label extends Control {
         if (!currentText.equals(previousText)) {
             // TODO: JavaScript escape
             sbScript.append(String.format("%s.textContent = '%s';\n", this.getClientId(), currentText));
+        }
+        
+        if (previousControlState.getClickHandlers().isEmpty() &&
+                this.clickHandlers != null && !this.clickHandlers.isEmpty()) {
+            sbScript.append(String.format("%s.addEventListener('click', onClickHandler, {\n", this.getClientId()));
+            sbScript.append(
+                "    capture: false,\n" +
+                "    passive: true\n" +
+                "});\n");
+        } else if (!previousControlState.getClickHandlers().isEmpty() && this.getClickHandlers().isEmpty()) {
+            sbScript.append(String.format("%s.removeEventListener('click', onClickHandler, {\n", this.getClientId()));
+            sbScript.append(
+                "    capture: false,\n" +
+                "    passive: true\n" +
+                "});\n");
         }
         
         if (sbScript.length() > 0) {

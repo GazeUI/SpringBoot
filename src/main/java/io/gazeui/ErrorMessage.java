@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package io.gazeui.ui;
+package io.gazeui;
 
 enum ErrorMessage {
     CONTROL_COLLECTION_MUST_HAVE_OWNER("The collection must have an owner"),
