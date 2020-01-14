@@ -22,26 +22,29 @@
  * SOFTWARE.
  */
 
-package io.gazeui.springboot.annotation;
+package io.gazeui.springboot.configuration;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.springframework.context.annotation.Import;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.MutablePropertySources;
 
-import io.gazeui.springboot.configuration.WebConfiguration;
-import io.gazeui.ui.Window;
-
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-@Documented
-@Import(WebConfiguration.class)
-public @interface EnableGazeUI {
+@Configuration
+public class PropertiesConfiguration {
     
-    Class<? extends Window> mainWindowClass();
+    public static final String PROPERTY_KEY_GAZEUI_BASE_PATH = "gazeui.base-path";
+    private static final String PROPERTY_SOURCE_NAME = "localProperties";
     
-    String basePath() default "";
+    @Autowired
+    public void setLocalProperties(ConfigurableEnvironment env, WebConfiguration gazeUIWebConfig) {
+        Map<String, Object> propertiesMap = new HashMap<>();
+        propertiesMap.put(PROPERTY_KEY_GAZEUI_BASE_PATH, gazeUIWebConfig.getEnableGazeUIAnnotation().basePath());
+        
+        MutablePropertySources propertySources = env.getPropertySources();
+        propertySources.addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME, propertiesMap));
+    }
 }

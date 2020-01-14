@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019 Rosberg Linhares (rosberglinhares@gmail.com)
+ * Copyright (c) 2020 Rosberg Linhares (rosberglinhares@gmail.com)
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,37 +22,27 @@
  * SOFTWARE.
  */
 
-package io.gazeui.springboot;
-
-import java.lang.reflect.Method;
+package io.gazeui.springboot.configuration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.annotation.SessionScope;
-import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import io.gazeui.springboot.annotation.EnableGazeUI;
-import io.gazeui.springboot.http.MediaTypeExtensions;
 import io.gazeui.ui.Window;
 
 @Configuration
 @ComponentScan("io.gazeui.springboot")
-public class GazeUIConfiguration {
-    
-    public static final String CREATE_INITIAL_UI_URL_PATH = "create-initial-ui";
-    public static final String PROCESS_SERVER_UI_EVENT_URL_PATH = "process-server-ui-event";
+public class WebConfiguration {
     
     private final EnableGazeUI enableGazeUIAnnotation;
     private String htmlBaseUrl;
     
     @Autowired
-    public GazeUIConfiguration(ApplicationContext applicationContext) {
+    public WebConfiguration(ApplicationContext applicationContext) {
         // Get the first EnableGazeUI annotation and ignore the other ones
         String beanNameWithEnableGazeUI = applicationContext.getBeanNamesForAnnotation(EnableGazeUI.class)[0];
         this.enableGazeUIAnnotation = applicationContext.findAnnotationOnBean(beanNameWithEnableGazeUI, EnableGazeUI.class);
@@ -81,50 +71,14 @@ public class GazeUIConfiguration {
         }
     }
     
+    public EnableGazeUI getEnableGazeUIAnnotation() {
+        return this.enableGazeUIAnnotation;
+    }
+
     public String getHtmlBaseUrl() {
         return this.htmlBaseUrl;
     }
 
-    @Autowired
-    public void setDynamicHandlerMappings(RequestMappingHandlerMapping mapping, GazeUIController gazeUIController) {
-        Method getInitialHtmlMethod;
-        Method getInitialUICreationScriptMethod;
-        Method processServerUIEventMethod;
-        
-        try {
-            getInitialHtmlMethod = GazeUIController.class.getDeclaredMethod("getInitialHtml");
-            getInitialUICreationScriptMethod = GazeUIController.class.getDeclaredMethod("getInitialUICreationScript");
-            processServerUIEventMethod = GazeUIController.class.getDeclaredMethod(
-                    "processServerUIEvent", ServerUIEventInfo.class);
-        } catch (NoSuchMethodException | SecurityException ex) {
-            // Never happens, once the methods will always be declared
-            throw new RuntimeException(ex);
-        }
-        
-        RequestMappingInfo getInitialHtmlMappingInfo = RequestMappingInfo
-                .paths(this.enableGazeUIAnnotation.basePath())
-                .methods(RequestMethod.GET)
-                .produces(MediaType.TEXT_HTML_VALUE)
-                .build();
-        
-        RequestMappingInfo getInitialUICreationScriptMappingInfo = RequestMappingInfo
-                .paths(this.enableGazeUIAnnotation.basePath() + "/" + CREATE_INITIAL_UI_URL_PATH)
-                .methods(RequestMethod.GET)
-                .produces(MediaTypeExtensions.APPLICATION_JAVASCRIPT_VALUE)
-                .build();
-        
-        RequestMappingInfo processServerUIEventMappingInfo = RequestMappingInfo
-                .paths(this.enableGazeUIAnnotation.basePath() + "/" + PROCESS_SERVER_UI_EVENT_URL_PATH)
-                .methods(RequestMethod.POST)
-                .consumes(MediaType.APPLICATION_JSON_VALUE)
-                .produces(MediaTypeExtensions.APPLICATION_JAVASCRIPT_VALUE)
-                .build();
-        
-        mapping.registerMapping(getInitialHtmlMappingInfo, gazeUIController, getInitialHtmlMethod);
-        mapping.registerMapping(getInitialUICreationScriptMappingInfo, gazeUIController, getInitialUICreationScriptMethod);
-        mapping.registerMapping(processServerUIEventMappingInfo, gazeUIController, processServerUIEventMethod);
-    }
-    
     @Bean
     @SessionScope
     public Window mainWindow() {

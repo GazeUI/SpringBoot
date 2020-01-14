@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019 Rosberg Linhares (rosberglinhares@gmail.com)
+ * Copyright (c) 2020 Rosberg Linhares (rosberglinhares@gmail.com)
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,30 +25,36 @@
 package io.gazeui.springboot;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.gazeui.springboot.configuration.PropertiesConfiguration;
+import io.gazeui.springboot.configuration.WebConfiguration;
+import io.gazeui.springboot.http.MediaTypeExtensions;
 import io.gazeui.ui.Window;
 
 @RestController
+@RequestMapping(path = "${" + PropertiesConfiguration.PROPERTY_KEY_GAZEUI_BASE_PATH + "}")
 public class GazeUIController {
     
+    private static final String CREATE_INITIAL_UI_URL_PATH = "create-initial-ui";
+    private static final String PROCESS_SERVER_UI_EVENT_URL_PATH = "process-server-ui-event";
+    
     private final Window viewStateWindow;
-    private GazeUIConfiguration gazeUIConfiguration;
+    private final WebConfiguration gazeUIWebConfig;
     private String initialHtml;
     
     @Autowired
-    public GazeUIController(Window viewStateWindow) {
+    public GazeUIController(Window viewStateWindow, WebConfiguration gazeUIWebConfig) {
         this.viewStateWindow = viewStateWindow;
+        this.gazeUIWebConfig = gazeUIWebConfig;
     }
     
-    @Autowired
-    public void setGazeUIConfiguration(GazeUIConfiguration gazeUIConfiguration) {
-        // Using a setter injection to avoid a dependency cycle
-        this.gazeUIConfiguration = gazeUIConfiguration;
-    }
-    
-    //@GetMapping(produces = MediaType.TEXT_HTML_VALUE)
+    @GetMapping(produces = MediaType.TEXT_HTML_VALUE)
     public String getInitialHtml() {
         if (this.initialHtml == null) {
             StringBuilder sbInitialHtml = new StringBuilder();
@@ -85,16 +91,16 @@ public class GazeUIController {
                     "  <meta charset='UTF-8'>\n" + 
                     "  <title></title>\n");
             
-            if (this.gazeUIConfiguration.getHtmlBaseUrl() != null) {
+            if (this.gazeUIWebConfig.getHtmlBaseUrl() != null) {
                 // A base element is necessary when the GazeUI base path does not end in '/'
-                sbInitialHtml.append(String.format("  <base href='%s'>\n", this.gazeUIConfiguration.getHtmlBaseUrl()));
+                sbInitialHtml.append(String.format("  <base href='%s'>\n", this.gazeUIWebConfig.getHtmlBaseUrl()));
             }
             
             // The defer attribute allows the script to be executed after the document has been parsed.
             // This is necessary because the page contents must be available in order to the script be correctly
             // executed.
             sbInitialHtml.append(String.format("  <script defer src='%s'></script>\n",
-                    GazeUIConfiguration.CREATE_INITIAL_UI_URL_PATH));
+                    GazeUIController.CREATE_INITIAL_UI_URL_PATH));
             
             // The 'no-store' cache mode bypass the cache completely.
             sbInitialHtml.append(
@@ -116,7 +122,7 @@ public class GazeUIController {
                     "        \n");
             
             sbInitialHtml.append(String.format("        let response = await fetch('%s', fetchOptions);\n",
-                    GazeUIConfiguration.PROCESS_SERVER_UI_EVENT_URL_PATH));
+                    GazeUIController.PROCESS_SERVER_UI_EVENT_URL_PATH));
             
             // 1. We are using the 'response.body' property because, at Dec/2019, it has 73.94% of global usage¹, while the
             //    'response.text()' method has only 36.71%².
@@ -182,7 +188,9 @@ public class GazeUIController {
         return this.initialHtml;
     }
     
-    //@GetMapping(path = "/create-initial-ui", produces = MediaTypeExtensions.APPLICATION_JAVASCRIPT_VALUE)
+    @GetMapping(
+            path = "/" + GazeUIController.CREATE_INITIAL_UI_URL_PATH,
+            produces = MediaTypeExtensions.APPLICATION_JAVASCRIPT_VALUE)
     public String getInitialUICreationScript() {
         final int extraTextLength = 34;
         String renderScript = this.viewStateWindow.getRenderScript(null);
@@ -199,10 +207,10 @@ public class GazeUIController {
         return sbScript.toString();
     }
     
-    //@PostMapping(
-    //        path = "/process-server-ui-event",
-    //        consumes = MediaType.APPLICATION_JSON_VALUE,
-    //        produces = MediaTypeExtensions.APPLICATION_JAVASCRIPT_VALUE)
+    @PostMapping(
+            path = "/" + GazeUIController.PROCESS_SERVER_UI_EVENT_URL_PATH,
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaTypeExtensions.APPLICATION_JAVASCRIPT_VALUE)
     public String processServerUIEvent(@RequestBody ServerUIEventInfo serverUIEventInfo) {
         Window previousViewStateWindow = this.viewStateWindow.clone();
         
