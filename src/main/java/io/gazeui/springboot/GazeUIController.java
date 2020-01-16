@@ -190,7 +190,7 @@ public class GazeUIController {
     
     @GetMapping(
             path = "/" + GazeUIController.CREATE_INITIAL_UI_URL_PATH,
-            produces = MediaTypeExtensions.APPLICATION_JAVASCRIPT_VALUE)
+            produces = MediaTypeExtensions.TEXT_JAVASCRIPT_VALUE)
     public String getInitialUICreationScript() {
         final int extraTextLength = 34;
         String renderScript = this.viewStateWindow.getRenderScript(null);
@@ -210,7 +210,7 @@ public class GazeUIController {
     @PostMapping(
             path = "/" + GazeUIController.PROCESS_SERVER_UI_EVENT_URL_PATH,
             consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaTypeExtensions.APPLICATION_JAVASCRIPT_VALUE)
+            produces = MediaTypeExtensions.TEXT_JAVASCRIPT_VALUE)
     public String processServerUIEvent(@RequestBody ServerUIEventInfo serverUIEventInfo) {
         Window previousViewStateWindow = this.viewStateWindow.clone();
         

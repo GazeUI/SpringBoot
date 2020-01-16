@@ -30,7 +30,7 @@ public final class MediaTypeExtensions {
         // No instances allowed
     }
     
-    // According to the RFC 4329, text/javascript is obsolete.
-    // See http://www.rfcreader.com/#rfc4329_line370 for details.
-    public static final String APPLICATION_JAVASCRIPT_VALUE = "application/javascript";
+    // The 'text/javascript' MIME type seams obsolete, but it is the right one to be used.
+    // See https://stackoverflow.com/a/59774584/2160765 for details.
+    public static final String TEXT_JAVASCRIPT_VALUE = "text/javascript";
 }
