@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019 Rosberg Linhares (rosberglinhares@gmail.com)
+ * Copyright (c) 2020 Rosberg Linhares (rosberglinhares@gmail.com)
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -46,19 +46,17 @@ public class Label extends Control {
     }
     
     @Override
-    protected String getRenderScript(Control previousControlState) {
+    protected void render(RenderScriptWriter writer, Control previousControlState) {
         if (previousControlState == null) {
-            return this.getCreateRenderScript();
+            this.renderCreation(writer);
         } else {
-            return this.getUpdateRenderScript((Label)previousControlState);
+            this.renderUpdate(writer, (Label)previousControlState);
         }
     }
     
-    private String getCreateRenderScript() {
-        StringBuilder sbScript = new StringBuilder();
-        
-        sbScript.append(String.format("var %s = document.createElement('span');\n", this.getClientId()));
-        sbScript.append(String.format("%1$s.id = '%1$s';\n", this.getClientId()));
+    private void renderCreation(RenderScriptWriter writer) {
+        writer.format("var %s = document.createElement('span');\n", this.getClientId());
+        writer.format("%1$s.id = '%1$s';\n", this.getClientId());
         
         // According to the MDN website¹:
         //
@@ -71,28 +69,19 @@ public class Label extends Control {
         
         if (this.getText() != null && !this.getText().isEmpty()) {
             // TODO: JavaScript escape
-            sbScript.append(String.format("%s.textContent = '%s';\n", this.getClientId(),
-                    this.getText()));
+            writer.format("%s.textContent = '%s';\n", this.getClientId(), this.getText());
         }
-        
-        return sbScript.toString();
     }
     
-    private String getUpdateRenderScript(Label previousControlState) {
-        StringBuilder sbScript = new StringBuilder();
-        
+    private void renderUpdate(RenderScriptWriter writer, Label previousControlState) {
         String currentText = Optional.ofNullable(this.getText()).orElse("");
         String previousText = Optional.ofNullable(previousControlState.getText()).orElse("");
         
         if (!currentText.equals(previousText)) {
+            writer.print(this.selectionScript());
+            
             // TODO: JavaScript escape
-            sbScript.append(String.format("%s.textContent = '%s';\n", this.getClientId(), currentText));
+            writer.format("%s.textContent = '%s';\n", this.getClientId(), currentText);
         }
-        
-        if (sbScript.length() > 0) {
-            sbScript.insert(0, this.selectionScript());
-        }
-        
-        return sbScript.toString();
     }
 }

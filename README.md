@@ -83,22 +83,6 @@ This project is licensed under the terms of the MIT license. See the [LICENSE](L
 </thead>
 <tbody>
     <tr>
-        <td align="center">defer</td>
-        <td align="center">10</td>
-        <td align="center">12</td>
-        <td align="center">31</td>
-        <td align="center">8</td>
-        <td align="center">5</td>
-        <td align="center">15</td>
-        <td align="center">5</td>
-        <td align="center">3</td>
-        <td align="center">46</td>
-        <td align="center">78</td>
-        <td align="center">68</td>
-        <td align="center">4</td>
-        <td align="center">97.39%</td>
-    </tr>
-    <tr>
         <td align="center">async</td>
         <td align="center">-</td>
         <td align="center">15</td>
@@ -450,22 +434,70 @@ This project is licensed under the terms of the MIT license. See the [LICENSE](L
         <td align="center">4</td>
         <td align="center">94.07%</td>
     </tr>
+    <tr>
+        <td align="center"><script type="module"></td>
+        <td align="center">-</td>
+        <td align="center">16</td>
+        <td align="center">60</td>
+        <td align="center">61</td>
+        <td align="center">11</td>
+        <td align="center">48</td>
+        <td align="center">11</td>
+        <td align="center">76</td>
+        <td align="center">-</td>
+        <td align="center">79</td>
+        <td align="center">68</td>
+        <td align="center">8.2</td>
+        <td align="center">88%</td>
+    </tr>
+    <tr>
+        <td align="center">Dynamic import()</td>
+        <td align="center">-</td>
+        <td align="center">79</td>
+        <td align="center">67</td>
+        <td align="center">63</td>
+        <td align="center">11.1</sup></td>
+        <td align="center">50</td>
+        <td align="center">11</sup></td>
+        <td align="center">76</td>
+        <td align="center">46</td>
+        <td align="center">79</td>
+        <td align="center">68</td>
+        <td align="center">8.2</td>
+        <td align="center">85.71%</td>
+    </tr>
+    <tr>
+        <td align="center">Object .getPrototypeOf</td>
+        <td align="center">9</td>
+        <td align="center">12</td>
+        <td align="center">3.5</td>
+        <td align="center">5</td>
+        <td align="center">5</sup></td>
+        <td align="center">12.1</td>
+        <td align="center">5</td>
+        <td align="center">2.1</td>
+        <td align="center">>=46</td>
+        <td align="center">79</td>
+        <td align="center">68</td>
+        <td align="center">>=10.1</td>
+        <td align="center">92.73%</td>
+    </tr>
 </tbody>
 <tfoot>
     <tr>
         <th>Result</th>
         <td align="center">-</td>
-        <td align="center">15</td>
-        <td align="center">65</td>
-        <td align="center">55</td>
-        <td align="center">11</td>
-        <td align="center">42</td>
+        <td align="center">79</td>
+        <td align="center">67</td>
+        <td align="center">63</td>
+        <td align="center">11.1</td>
+        <td align="center">50</td>
         <td align="center">11</td>
         <td align="center">76</td>
         <td align="center">46</td>
-        <td align="center">78</td>
+        <td align="center">79</td>
         <td align="center">68</td>
-        <td align="center">6.2</td>
+        <td align="center">>=10.1</td>
         <td align="center">3.86%</td>
     </tr>
 </tfoot>

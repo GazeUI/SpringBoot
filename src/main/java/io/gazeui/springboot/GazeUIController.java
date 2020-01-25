@@ -32,17 +32,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.gazeui.RenderScriptWriter;
+import io.gazeui.Window;
 import io.gazeui.springboot.configuration.PropertiesConfiguration;
 import io.gazeui.springboot.configuration.WebConfiguration;
 import io.gazeui.springboot.http.MediaTypeExtensions;
-import io.gazeui.Window;
 
 @RestController
 @RequestMapping(path = "${" + PropertiesConfiguration.PROPERTY_KEY_GAZEUI_BASE_PATH + "}")
 public class GazeUIController {
     
-    private static final String CREATE_INITIAL_UI_URL_PATH = "create-initial-ui";
-    private static final String PROCESS_SERVER_UI_EVENT_URL_PATH = "process-server-ui-event";
+    private static final String CREATE_INITIAL_UI_URL_PATH = "create-initial-ui.mjs";
+    private static final String PROCESS_SERVER_UI_EVENT_URL_PATH = "process-server-ui-event.js";
     
     private final Window viewStateWindow;
     private final WebConfiguration gazeUIWebConfig;
@@ -96,87 +97,13 @@ public class GazeUIController {
                 sbInitialHtml.append(String.format("  <base href='%s'>\n", this.gazeUIWebConfig.getHtmlBaseUrl()));
             }
             
-            // The defer attribute allows the script to be executed after the document has been parsed.
-            // This is necessary because the page contents must be available in order to the script be correctly
-            // executed.
-            sbInitialHtml.append(String.format("  <script defer src='%s'></script>\n",
+            // Modules are deferred and use strict mode automatically. A deferred script is executed after the document
+            // has been parsed. This behavior is necessary because the page contents must be available in order to the
+            // script be correctly executed.
+            sbInitialHtml.append(String.format("  <script type='module' src='%s'></script>\n",
                     GazeUIController.CREATE_INITIAL_UI_URL_PATH));
             
-            // The 'no-store' cache mode bypass the cache completely.
             sbInitialHtml.append(
-                    "  <script>\n" + 
-                    "    async function processServerUIEvent(controlId, eventName) {\n" + 
-                    "        let eventInfo = {\n" + 
-                    "            controlId: controlId,\n" + 
-                    "            eventName: eventName\n" + 
-                    "        };\n" + 
-                    "        \n" + 
-                    "        let fetchOptions = {\n" + 
-                    "            method: 'POST',\n" + 
-                    "            cache: 'no-store',\n" + 
-                    "            headers: {\n" + 
-                    "                'Content-Type': 'application/json'\n" + 
-                    "            },\n" + 
-                    "            body: JSON.stringify(eventInfo)\n" + 
-                    "        };\n" + 
-                    "        \n");
-            
-            sbInitialHtml.append(String.format("        let response = await fetch('%s', fetchOptions);\n",
-                    GazeUIController.PROCESS_SERVER_UI_EVENT_URL_PATH));
-            
-            // 1. We are using the 'response.body' property because, at Dec/2019, it has 73.94% of global usage¹, while the
-            //    'response.text()' method has only 36.71%².
-            // 
-            //      [1]: https://caniuse.com/#feat=mdn-api_body_body
-            //      [2]: https://caniuse.com/#feat=mdn-api_body_text
-            // 
-            // 2. According to the MDN website, you should never use 'eval()', but 'window.Function()' instead.
-            //    See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval for details.
-            // 
-            // 3. We have to observe two special cases when dealing with event handlers and nested controls:
-            // 
-            //    3.1. If there is one ancestor control with an event handler and one descendant without it,
-            //         the event will be fired on the ancestor control if the descendant control is stimulated.
-            //    3.2. If both the ancestor and descendant controls have event handlers, the event will be fired
-            //         on both controls when the descendant control is stimulated.
-            //    
-            //    We deal with these two special cases checking if 'target' and 'currentTarget' are the same.
-            //    We also use 'stopImmediatePropagation' just to certify that no other events will run for the same action.
-            //    See the following link for more detail about event order:
-            //    
-            //      [1]: https://www.quirksmode.org/js/events_order.html
-            sbInitialHtml.append(
-                    "        let responseText = await getTextFromStream(response.body);\n" + 
-                    "        \n" + 
-                    "        executeJavaScriptCode(responseText);\n" + 
-                    "    }\n" + 
-                    "    \n" + 
-                    "    async function getTextFromStream(readableStream) {\n" + 
-                    "        let reader = readableStream.getReader();\n" + 
-                    "        let utf8Decoder = new TextDecoder();\n" + 
-                    "        let nextChunk;\n" + 
-                    "        \n" + 
-                    "        let resultStr = '';\n" + 
-                    "        \n" + 
-                    "        while (!(nextChunk = await reader.read()).done) {\n" + 
-                    "            let partialData = nextChunk.value;\n" + 
-                    "            resultStr += utf8Decoder.decode(partialData);\n" + 
-                    "        }\n" + 
-                    "        \n" + 
-                    "        return resultStr;\n" + 
-                    "    }\n" + 
-                    "    \n" + 
-                    "    function executeJavaScriptCode(code) {\n" + 
-                    "        return Function(code)();\n" + 
-                    "    }\n" + 
-                    "    \n" + 
-                    "    async function onClickHandler(mouseEvent) {\n" + 
-                    "        if (mouseEvent.target == mouseEvent.currentTarget) {\n" + 
-                    "            mouseEvent.stopImmediatePropagation();\n" + 
-                    "            await processServerUIEvent(mouseEvent.target.id, 'Click');\n" + 
-                    "        }\n" + 
-                    "    }\n" + 
-                    "  </script>\n" + 
                     "</head>\n" + 
                     "<body>\n" + 
                     "</body>\n" + 
@@ -192,19 +119,10 @@ public class GazeUIController {
             path = "/" + GazeUIController.CREATE_INITIAL_UI_URL_PATH,
             produces = MediaTypeExtensions.TEXT_JAVASCRIPT_VALUE)
     public String getInitialUICreationScript() {
-        final int extraTextLength = 34;
-        String renderScript = this.viewStateWindow.getRenderScript(null);
-        StringBuilder sbScript = new StringBuilder(renderScript.length() + extraTextLength);
+        RenderScriptWriter writer = new RenderScriptWriter(RenderScriptWriter.USE_STATIC_IMPORTS);
+        this.viewStateWindow.render(writer, null);
         
-        // Here we have to use a closure to limit the scope of the render script to be executed, once the
-        // overall code will be executed as the content of a JavaScript file.
-        sbScript.append("'use strict';\n");
-        sbScript.append("\n");
-        sbScript.append("(function() {\n");
-        sbScript.append(renderScript);
-        sbScript.append("})();");
-        
-        return sbScript.toString();
+        return writer.toString();
     }
     
     @PostMapping(
@@ -216,16 +134,33 @@ public class GazeUIController {
         
         this.viewStateWindow.processUIEvent(serverUIEventInfo.getControlId(), serverUIEventInfo.getEventName());
         
-        String renderScript = this.viewStateWindow.getRenderScript(previousViewStateWindow);
+        // It was not possible to use this generated script as a JavaScript ES6 module:
+        // 
+        //   1. It is not possible to evaluate (using 'eval()' or 'window.Function()') the code of module. See links
+        //      [1] and [2].
+        //   2. The module loader API could also be used to create modules from strings, but it is out of date and is
+        //      undergoing revision³.
+        //   3. Data URIs could be used⁴, but it would not be possible to import other modules⁵.
+        //   4. Once the module loader API is out of date, we choose not to use polyfills like ES Module Loader
+        //      Polyfill⁶ or SystemJS.
+        //   
+        //     [1]: https://exploringjs.com/es6/ch_modules.html#_can-i-eval-the-code-of-module
+        //     [2]: https://2ality.com/2019/10/eval-via-import.html#eval()-does-not-support-export-and-import
+        //     [3]: https://github.com/whatwg/loader#status
+        //     [4]: https://2ality.com/2019/10/eval-via-import.html
+        //     [5]: https://stackoverflow.com/questions/59941483/importing-nested-javascript-es6-modules-to-a-module-created-from-a-string-of-cod
+        //     [6]: https://github.com/ModuleLoader/es-module-loader
+        //     [7]: https://github.com/tc39/proposal-dynamic-import
+        RenderScriptWriter writer = new RenderScriptWriter(RenderScriptWriter.USE_DYNAMIC_IMPORTS);
+        this.viewStateWindow.render(writer, previousViewStateWindow);
         
-        if (!renderScript.isEmpty()) {
-            final int extraTextLength = 15;
-            StringBuilder sbScript = new StringBuilder(renderScript.length() + extraTextLength);
+        if (!writer.isEmpty()) {
+            StringBuilder sbScript = new StringBuilder();
             
             // Here is not necessary to use a closure because this code will be already executed in a limited scope.
             sbScript.append("'use strict';\n");
             sbScript.append("\n");
-            sbScript.append(renderScript);
+            sbScript.append(writer.toString());
             
             return sbScript.toString();
         } else {

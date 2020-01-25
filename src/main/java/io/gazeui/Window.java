@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019 Rosberg Linhares (rosberglinhares@gmail.com)
+ * Copyright (c) 2020 Rosberg Linhares (rosberglinhares@gmail.com)
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -105,17 +105,15 @@ public abstract class Window extends ContainerControl {
     }
     
     @Override
-    public String getRenderScript(Control previousControlState) {
+    public void render(RenderScriptWriter writer, Control previousControlState) {
         if (previousControlState == null) {
-            return this.getCreateRenderScript();
+            this.renderCreation(writer);
         } else {
-            return this.getUpdateRenderScript((Window)previousControlState);
+            this.renderUpdate(writer, (Window)previousControlState);
         }
     }
     
-    private String getCreateRenderScript() {
-        StringBuilder sbScript = new StringBuilder();
-        
+    private void renderCreation(RenderScriptWriter writer) {
         if (Strings.isNullOrBlank(this.getTitle())) {
             // According to the HTML 5.2 specification, the title element must contain at least one non-whitespace
             // character. See https://www.w3.org/TR/html52/document-metadata.html#the-title-element for details.
@@ -123,26 +121,20 @@ public abstract class Window extends ContainerControl {
         }
         
         // TODO: JavaScript escape
-        sbScript.append(String.format("document.title = '%s';\n", this.getTitle()));
+        writer.format("document.title = '%s';\n", this.getTitle());
         
         // Add the default ContainerControl script
-        sbScript.append(super.getRenderScript(null));
-        
-        return sbScript.toString();
+        super.render(writer, null);
     }
     
-    private String getUpdateRenderScript(Window previousControlState) {
-        StringBuilder sbScript = new StringBuilder();
-        
+    private void renderUpdate(RenderScriptWriter writer, Window previousControlState) {
         if (!this.getTitle().equals(previousControlState.getTitle())) {
             // TODO: JavaScript escape
-            sbScript.append(String.format("document.title = '%s';\n", this.getTitle()));
+            writer.format("document.title = '%s';\n", this.getTitle());
         }
         
         // Add the default ContainerControl script
-        sbScript.append(super.getRenderScript(previousControlState));
-        
-        return sbScript.toString();
+        super.render(writer, previousControlState);
     }
     
     public void processUIEvent(String controlId, String eventName) {

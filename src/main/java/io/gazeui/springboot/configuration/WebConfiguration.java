@@ -30,6 +30,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import io.gazeui.springboot.annotation.EnableGazeUI;
 import io.gazeui.Window;
@@ -37,6 +39,8 @@ import io.gazeui.Window;
 @Configuration
 @ComponentScan("io.gazeui.springboot")
 public class WebConfiguration {
+    
+    private static final String CLASSPATH_STATIC_RESOURCE_LOCATION = "classpath:/static/";
     
     private final EnableGazeUI enableGazeUIAnnotation;
     private String htmlBaseUrl;
@@ -74,11 +78,24 @@ public class WebConfiguration {
     public EnableGazeUI getEnableGazeUIAnnotation() {
         return this.enableGazeUIAnnotation;
     }
-
+    
     public String getHtmlBaseUrl() {
         return this.htmlBaseUrl;
     }
-
+    
+    @Bean
+    public WebMvcConfigurer webMvcConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addResourceHandlers(ResourceHandlerRegistry registry) {
+                String urlPattern = WebConfiguration.this.enableGazeUIAnnotation.basePath() + "/**";
+                
+                registry.addResourceHandler(urlPattern)
+                    .addResourceLocations(WebConfiguration.CLASSPATH_STATIC_RESOURCE_LOCATION);
+            }
+        };
+    }
+    
     @Bean
     @SessionScope
     public Window mainWindow() {

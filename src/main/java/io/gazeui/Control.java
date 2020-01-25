@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019 Rosberg Linhares (rosberglinhares@gmail.com)
+ * Copyright (c) 2020 Rosberg Linhares (rosberglinhares@gmail.com)
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -144,5 +144,5 @@ public abstract class Control implements Cloneable {
         return this.getClientId();
     }
     
-    protected abstract String getRenderScript(Control previousControlState);
+    protected abstract void render(RenderScriptWriter writer, Control previousControlState);
 }

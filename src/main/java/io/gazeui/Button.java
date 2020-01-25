@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019 Rosberg Linhares (rosberglinhares@gmail.com)
+ * Copyright (c) 2020 Rosberg Linhares (rosberglinhares@gmail.com)
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -98,19 +98,19 @@ public class Button extends Control {
     }
     
     @Override
-    protected String getRenderScript(Control previousControlState) {
+    protected void render(RenderScriptWriter writer, Control previousControlState) {
         if (previousControlState == null) {
-            return this.getCreateRenderScript();
+            this.renderCreation(writer);
         } else {
-            return this.getUpdateRenderScript((Button)previousControlState);
+            this.renderUpdate(writer, (Button)previousControlState);
         }
     }
     
-    private String getCreateRenderScript() {
-        StringBuilder sbScript = new StringBuilder();
+    private void renderCreation(RenderScriptWriter writer) {
+        boolean moduleNeeded = false;
         
-        sbScript.append(String.format("var %s = document.createElement('button');\n", this.getClientId()));
-        sbScript.append(String.format("%1$s.id = '%1$s';\n", this.getClientId()));
+        writer.format("var %s = document.createElement('button');\n", this.getClientId());
+        writer.format("%1$s.id = '%1$s';\n", this.getClientId());
         
         // According to the MDN website¹:
         //
@@ -123,53 +123,64 @@ public class Button extends Control {
         
         if (this.getText() != null && !this.getText().isEmpty()) {
             // TODO: JavaScript escape
-            sbScript.append(String.format("%s.textContent = '%s';\n", this.getClientId(),
-                    this.getText()));
+            writer.format("%s.textContent = '%s';\n", this.getClientId(), this.getText());
         }
         
         // Here we are accessing the variable directly to avoid the unnecessary creation of the collection
         // when there are no handlers.
         if (this.clickHandlers != null && !this.clickHandlers.isEmpty()) {
-            sbScript.append(String.format("%s.addEventListener('click', onClickHandler, {\n", this.getClientId()));
-            sbScript.append(
+            moduleNeeded = true;
+            
+            writer.format("%s.addEventListener('click', Button.onClickHandler, {\n", this.getClientId());
+            writer.print(
                 "    capture: false,\n" +
                 "    passive: true\n" +
                 "});\n");
         }
         
-        return sbScript.toString();
+        if (moduleNeeded) {
+            writer.importModule("Button", "./button/button.mjs");
+        }
     }
     
-    private String getUpdateRenderScript(Button previousControlState) {
-        StringBuilder sbScript = new StringBuilder();
+    private void renderUpdate(RenderScriptWriter writer, Button previousControlState) {
+        RenderScriptWriter localWriter = new RenderScriptWriter();
+        boolean moduleNeeded = false;
         
         String currentText = Optional.ofNullable(this.getText()).orElse("");
         String previousText = Optional.ofNullable(previousControlState.getText()).orElse("");
         
         if (!currentText.equals(previousText)) {
             // TODO: JavaScript escape
-            sbScript.append(String.format("%s.textContent = '%s';\n", this.getClientId(), currentText));
+            localWriter.format("%s.textContent = '%s';\n", this.getClientId(), currentText);
         }
         
         if (previousControlState.getClickHandlers().isEmpty() &&
                 this.clickHandlers != null && !this.clickHandlers.isEmpty()) {
-            sbScript.append(String.format("%s.addEventListener('click', onClickHandler, {\n", this.getClientId()));
-            sbScript.append(
+            moduleNeeded = true;
+            
+            localWriter.format("%s.addEventListener('click', Button.onClickHandler, {\n", this.getClientId());
+            localWriter.print(
                 "    capture: false,\n" +
                 "    passive: true\n" +
                 "});\n");
         } else if (!previousControlState.getClickHandlers().isEmpty() && this.getClickHandlers().isEmpty()) {
-            sbScript.append(String.format("%s.removeEventListener('click', onClickHandler, {\n", this.getClientId()));
-            sbScript.append(
+            moduleNeeded = true;
+            
+            localWriter.format("%s.removeEventListener('click', Button.onClickHandler, {\n", this.getClientId());
+            localWriter.print(
                 "    capture: false,\n" +
                 "    passive: true\n" +
                 "});\n");
         }
         
-        if (sbScript.length() > 0) {
-            sbScript.insert(0, this.selectionScript());
+        if (!localWriter.isEmpty()) {
+            if (moduleNeeded) {
+                writer.importModule("Button", "./button/button.mjs");
+            }
+            
+            writer.print(this.selectionScript());
+            writer.print(localWriter);
         }
-        
-        return sbScript.toString();
     }
 }

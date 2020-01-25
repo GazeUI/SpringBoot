@@ -1,7 +1,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2019 Rosberg Linhares (rosberglinhares@gmail.com)
+ * Copyright (c) 2020 Rosberg Linhares (rosberglinhares@gmail.com)
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -84,37 +84,28 @@ public class ContainerControl extends Control {
     }
     
     @Override
-    protected String getRenderScript(Control previousControlState) {
+    protected void render(RenderScriptWriter writer, Control previousControlState) {
         if (previousControlState == null) {
-            return this.getCreateRenderScript();
+            this.renderCreation(writer);
         } else {
-            return this.getUpdateRenderScript((ContainerControl)previousControlState);
+            this.renderUpdate(writer, (ContainerControl)previousControlState);
         }
     }
     
-    private String getCreateRenderScript() {
-        StringBuilder sbScript = new StringBuilder();
-        
-        sbScript.append(this.creationScript());
+    private void renderCreation(RenderScriptWriter writer) {
+        writer.print(this.creationScript());
         
         for (Control childControl : this.getControls()) {
-            String createChildControlScript = childControl.getRenderScript(null);
-            
-            sbScript.append(createChildControlScript);
-            sbScript.append(String.format("%s.appendChild(%s);\n",
-                    this.identificationToken(), childControl.identificationToken()));
+            childControl.render(writer, null);
+            writer.format("%s.appendChild(%s);\n", this.identificationToken(), childControl.identificationToken());
         }
-        
-        return sbScript.toString();
     }
     
-    private String getUpdateRenderScript(ContainerControl previousControlState) {
+    private void renderUpdate(RenderScriptWriter writer, ContainerControl previousControlState) {
         // We expect that operations of adding, removing and changing child controls order will not be so common.
         // So we check first for the case which at most updates on child controls were made. Doing that we avoid
         // running the Longest Common Subsequence algorithm (a heavy operation) for this simple case.
         if (this.listsWithSameStructure(this.getControls(), previousControlState.getControls())) {
-            StringBuilder sbUpdateChildControlsScript = new StringBuilder();
-            
             Iterator<Control> currentChildControlsIterator = this.getControls().iterator();
             Iterator<Control> previousChildControlsIterator = previousControlState.getControls().iterator();
             
@@ -122,14 +113,12 @@ public class ContainerControl extends Control {
                 Control childControl = currentChildControlsIterator.next();
                 Control previousChildControl = previousChildControlsIterator.next();
                 
-                sbUpdateChildControlsScript.append(childControl.getRenderScript(previousChildControl));
+                childControl.render(writer, previousChildControl);
             }
-            
-            return sbUpdateChildControlsScript.toString();
         } else {
-            StringBuilder sbRemoveChildControlsScript = new StringBuilder();
-            StringBuilder sbUpdateChildControlsScript = new StringBuilder();
-            StringBuilder sbAddAndChangeOrderChildControlsScript = new StringBuilder();
+            RenderScriptWriter writerRemove = new RenderScriptWriter();
+            RenderScriptWriter writerUpdate = new RenderScriptWriter();
+            RenderScriptWriter writerAddAndChangeOrder = new RenderScriptWriter();
             
             List<Control> lcs = Lists.longestCommonSubsequence(this.getControls(),
                     previousControlState.getControls(), clientIdComparator);
@@ -144,8 +133,8 @@ public class ContainerControl extends Control {
             
             for (Control previousChildControl : previousControlState.getControls()) {
                 if (!currentChildControlsMap.containsKey(previousChildControl.getClientId())) {
-                    sbRemoveChildControlsScript.append(previousChildControl.selectionScript());
-                    sbRemoveChildControlsScript.append(String.format("%s.remove();\n", previousChildControl.identificationToken()));
+                    writerRemove.print(previousChildControl.selectionScript());
+                    writerRemove.format("%s.remove();\n", previousChildControl.identificationToken());
                 }
             }
             
@@ -181,10 +170,12 @@ public class ContainerControl extends Control {
                 
                 if (previousChildControlsMap.containsKey(childControl.getClientId())) {
                     Control previousChildControlState = previousChildControlsMap.get(childControl.getClientId());
-                    String updateChildControlScript = childControl.getRenderScript(previousChildControlState);
                     
-                    if (!updateChildControlScript.isEmpty()) {
-                        sbUpdateChildControlsScript.append(updateChildControlScript);
+                    RenderScriptWriter localWriterUpdate = new RenderScriptWriter();
+                    childControl.render(localWriterUpdate, previousChildControlState);
+                    
+                    if (!localWriterUpdate.isEmpty()) {
+                        writerUpdate.print(localWriterUpdate);
                         childControlIdentified = true;
                     }
                 }
@@ -193,12 +184,12 @@ public class ContainerControl extends Control {
                     if (previousChildControlsMap.containsKey(childControl.getClientId())) {
                         // The element changed its order
                         if (!childControlIdentified) {
-                            sbAddAndChangeOrderChildControlsScript.append(childControl.selectionScript());
+                            writerAddAndChangeOrder.print(childControl.selectionScript());
                             childControlIdentified = true;
                         }
                     } else {
                         // The element was added
-                        sbAddAndChangeOrderChildControlsScript.append(childControl.getRenderScript(null));
+                        childControl.render(writerAddAndChangeOrder, null);
                         childControlIdentified = true;
                     }
                     
@@ -206,7 +197,7 @@ public class ContainerControl extends Control {
                     
                     if (previousLoopChildControl != null) {
                         if (!previousLoopChildControlIdentified) {
-                            sbAddAndChangeOrderChildControlsScript.append(previousLoopChildControl.selectionScript());
+                            writerAddAndChangeOrder.print(previousLoopChildControl.selectionScript());
                         }
                         
                         previousLoopChildControlIdentificationToken = previousLoopChildControl.identificationToken();
@@ -215,38 +206,23 @@ public class ContainerControl extends Control {
                         previousLoopChildControlIdentificationToken = null;
                     }
                     
-                    sbAddAndChangeOrderChildControlsScript.append(String.format("%s.insertBefore(%s, %s);\n",
-                            this.identificationToken(), childControl.identificationToken(), previousLoopChildControlIdentificationToken));
+                    writerAddAndChangeOrder.format("%s.insertBefore(%s, %s);\n", this.identificationToken(),
+                            childControl.identificationToken(), previousLoopChildControlIdentificationToken);
                 }
                 
                 previousLoopChildControl = childControl;
                 previousLoopChildControlIdentified = childControlIdentified;
             }
             
-            StringBuilder sbScript;
-            
-            if (sbAddAndChangeOrderChildControlsScript.length() > 0) {
-                // To use the insertBefore DOM method, we have to have a reference to the parent node,
-                // which is this control itself.
-                String selectionScript = this.selectionScript();
-                
-                sbScript = new StringBuilder(sbRemoveChildControlsScript.length() +
-                        sbUpdateChildControlsScript.length() +
-                        selectionScript.length() + sbAddAndChangeOrderChildControlsScript.length());
-                
-                sbScript.append(sbRemoveChildControlsScript);
-                sbScript.append(sbUpdateChildControlsScript);
-                sbScript.append(selectionScript);
-                sbScript.append(sbAddAndChangeOrderChildControlsScript);
+            if (!writerAddAndChangeOrder.isEmpty()) {
+                writer.print(writerRemove);
+                writer.print(writerUpdate);
+                writer.print(this.selectionScript());
+                writer.print(writerAddAndChangeOrder);
             } else {
-                sbScript = new StringBuilder(sbRemoveChildControlsScript.length() +
-                        sbUpdateChildControlsScript.length());
-                
-                sbScript.append(sbRemoveChildControlsScript);
-                sbScript.append(sbUpdateChildControlsScript);
+                writer.print(writerRemove);
+                writer.print(writerUpdate);
             }
-            
-            return sbScript.toString();
         }
     }
     
