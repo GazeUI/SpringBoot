@@ -55,7 +55,7 @@ public class Label extends Control {
     }
     
     private void renderCreation(RenderScriptWriter writer) {
-        writer.format("var %s = document.createElement('span');\n", this.getClientId());
+        writer.format("let %s = document.createElement('span');\n", this.getClientId());
         writer.format("%1$s.id = '%1$s';\n", this.getClientId());
         
         // According to the MDN website¹:

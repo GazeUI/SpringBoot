@@ -79,7 +79,7 @@ public class ContainerControl extends Control {
      */
     protected String creationScript() {
         return String.format(
-                "var %1$s = document.createElement('div');\n" +
+                "let %1$s = document.createElement('div');\n" +
                 "%1$s.id = '%1$s';\n", this.getClientId());
     }
     

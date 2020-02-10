@@ -133,7 +133,7 @@ public abstract class Control implements Cloneable {
      * to use the token returned by the {@link #identificationToken()} method to reach the control.
      */
     protected String selectionScript() {
-        return String.format("var %1$s = document.getElementById('%1$s');\n", this.getClientId());
+        return String.format("let %1$s = document.getElementById('%1$s');\n", this.getClientId());
     }
     
     /**
