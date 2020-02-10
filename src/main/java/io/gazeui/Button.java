@@ -33,6 +33,9 @@ import io.gazeui.event.EventHandler;
 
 public class Button extends Control {
     
+    private static final String MODULE_NAME = "Button";
+    private static final String MODULE_PATH = "./button/button.mjs";
+    
     private String text;
     private List<EventHandler<EventArgs>> clickHandlers;
     
@@ -131,7 +134,7 @@ public class Button extends Control {
         if (this.clickHandlers != null && !this.clickHandlers.isEmpty()) {
             moduleNeeded = true;
             
-            writer.format("%s.addEventListener('click', Button.onClickHandler, {\n", this.getClientId());
+            writer.format("%s.addEventListener('click', %s.onClickHandler, {\n", this.getClientId(), MODULE_NAME);
             writer.print(
                 "    capture: false,\n" +
                 "    passive: true\n" +
@@ -139,7 +142,7 @@ public class Button extends Control {
         }
         
         if (moduleNeeded) {
-            writer.importModule("Button", "./button/button.mjs");
+            writer.importModule(MODULE_NAME, MODULE_PATH);
         }
     }
     
@@ -159,7 +162,8 @@ public class Button extends Control {
                 this.clickHandlers != null && !this.clickHandlers.isEmpty()) {
             moduleNeeded = true;
             
-            localWriter.format("%s.addEventListener('click', Button.onClickHandler, {\n", this.getClientId());
+            localWriter.format("%s.addEventListener('click', %s.onClickHandler, {\n", this.getClientId(),
+                    MODULE_NAME);
             localWriter.print(
                 "    capture: false,\n" +
                 "    passive: true\n" +
@@ -167,7 +171,8 @@ public class Button extends Control {
         } else if (!previousControlState.getClickHandlers().isEmpty() && this.getClickHandlers().isEmpty()) {
             moduleNeeded = true;
             
-            localWriter.format("%s.removeEventListener('click', Button.onClickHandler, {\n", this.getClientId());
+            localWriter.format("%s.removeEventListener('click', %s.onClickHandler, {\n", this.getClientId(),
+                    MODULE_NAME);
             localWriter.print(
                 "    capture: false,\n" +
                 "    passive: true\n" +
@@ -176,7 +181,7 @@ public class Button extends Control {
         
         if (!localWriter.isEmpty()) {
             if (moduleNeeded) {
-                writer.importModule("Button", "./button/button.mjs");
+                writer.importModule(MODULE_NAME, MODULE_PATH);
             }
             
             writer.print(this.selectionScript());
