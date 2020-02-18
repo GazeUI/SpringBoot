@@ -34,7 +34,12 @@ import java.util.function.Function;
 
 import io.gazeui.collections.Lists;
 
-public class ContainerControl extends Control {
+/**
+ * Represents a control that can function as a container for other controls.
+ * 
+ * @param <T> the type of controls in this container
+ */
+public class ContainerControl<T extends Control> extends Control {
 
     private static final Comparator<Control> clientIdComparator;
     
@@ -47,28 +52,29 @@ public class ContainerControl extends Control {
         };
     }
     
-    private List<Control> controls;
+    private List<T> controls;
     
-    public List<Control> getControls() {
+    public List<T> getControls() {
         if (this.controls == null) {
             // To generate the automatic ID for controls, we have to know when they are added.
             // So the use of a custom control collection.
-            this.controls = new ControlCollection(this);
+            this.controls = new ControlCollection<>(this);
         }
         
         return this.controls;
     }
     
+    @SuppressWarnings("unchecked")
     @Override
-    protected ContainerControl clone() {
-        ContainerControl clonedContainerControl = (ContainerControl)super.clone();
+    protected ContainerControl<T> clone() {
+        ContainerControl<T> clonedContainerControl = (ContainerControl<T>)super.clone();
         
         // The cloned collection will not suffer any operation, so it is not necessary to be a ControlCollection
-        clonedContainerControl.controls = new ArrayList<Control>(this.getControls().size());
+        clonedContainerControl.controls = new ArrayList<>(this.getControls().size());
         
         // Doing a deep copy of child controls
-        for (Control control : this.getControls()) {
-            clonedContainerControl.getControls().add(control.clone());
+        for (T control : this.getControls()) {
+            clonedContainerControl.getControls().add((T)control.clone());
         }
         
         return clonedContainerControl;
@@ -83,12 +89,13 @@ public class ContainerControl extends Control {
                 "%1$s.id = '%1$s';\n", this.getClientId());
     }
     
+    @SuppressWarnings("unchecked")
     @Override
     protected void render(RenderScriptWriter writer, Control previousControlState) {
         if (previousControlState == null) {
             this.renderCreation(writer);
         } else {
-            this.renderUpdate(writer, (ContainerControl)previousControlState);
+            this.renderUpdate(writer, (ContainerControl<T>)previousControlState);
         }
     }
     
@@ -101,13 +108,13 @@ public class ContainerControl extends Control {
         }
     }
     
-    private void renderUpdate(RenderScriptWriter writer, ContainerControl previousControlState) {
+    private void renderUpdate(RenderScriptWriter writer, ContainerControl<T> previousControlState) {
         // We expect that operations of adding, removing and changing child controls order will not be so common.
         // So we check first for the case which at most updates on child controls were made. Doing that we avoid
         // running the Longest Common Subsequence algorithm (a heavy operation) for this simple case.
         if (this.listsWithSameStructure(this.getControls(), previousControlState.getControls())) {
-            Iterator<Control> currentChildControlsIterator = this.getControls().iterator();
-            Iterator<Control> previousChildControlsIterator = previousControlState.getControls().iterator();
+            Iterator<T> currentChildControlsIterator = this.getControls().iterator();
+            Iterator<T> previousChildControlsIterator = previousControlState.getControls().iterator();
             
             while (currentChildControlsIterator.hasNext()) {
                 Control childControl = currentChildControlsIterator.next();
@@ -120,7 +127,7 @@ public class ContainerControl extends Control {
             RenderScriptWriter writerUpdate = new RenderScriptWriter();
             RenderScriptWriter writerAddAndChangeOrder = new RenderScriptWriter();
             
-            List<Control> lcs = Lists.longestCommonSubsequence(this.getControls(),
+            List<T> lcs = Lists.longestCommonSubsequence(this.getControls(),
                     previousControlState.getControls(), clientIdComparator);
             
             // These maps are used only to have constant-time performance for get operations.
@@ -140,7 +147,7 @@ public class ContainerControl extends Control {
             
             // 2. Update, Add and Order Changed
             
-            ListIterator<Control> reverseListIterator = this.getControls().listIterator(this.getControls().size());
+            ListIterator<T> reverseListIterator = this.getControls().listIterator(this.getControls().size());
             Control previousLoopChildControl = null;
             // If a variable pointing to the previous control in the loop was already created
             boolean previousLoopChildControlIdentified = false;
@@ -226,13 +233,13 @@ public class ContainerControl extends Control {
         }
     }
     
-    private boolean listsWithSameStructure(List<Control> list1, List<Control> list2) {
+    private boolean listsWithSameStructure(List<T> list1, List<T> list2) {
         if (list1.size() != list2.size()) {
             return false;
         }
         
-        Iterator<Control> it1 = list1.iterator();
-        Iterator<Control> it2 = list2.iterator();
+        Iterator<T> it1 = list1.iterator();
+        Iterator<T> it2 = list2.iterator();
         
         while (it1.hasNext()) {
             if (clientIdComparator.compare(it1.next(), it2.next()) != 0) {

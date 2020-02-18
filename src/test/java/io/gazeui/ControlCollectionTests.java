@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
 
 class ControlCollectionTests {
 
-    private ControlCollection controlCollection;
+    private ControlCollection<Control> controlCollection;
     private Button b1;
     private Button b2;
     private Button b3;
@@ -48,7 +48,7 @@ class ControlCollectionTests {
     
     @BeforeEach
     void setUp() {
-        this.controlCollection = new ControlCollection(new ContainerControl());
+        this.controlCollection = new ControlCollection<>(new ContainerControl<>());
         
         this.b1 = new Button("b1");
         this.b2 = new Button("b2");

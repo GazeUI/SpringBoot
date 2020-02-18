@@ -33,7 +33,13 @@ import java.util.ListIterator;
 import java.util.Objects;
 import java.util.Set;
 
-class ControlCollection implements List<Control> {
+/**
+ * Represents a list of controls and notify when these controls are added or removed from the list.
+ * Duplicate controls are not allowed.
+ * 
+ * @param <E> the type of elements in this collection
+ */
+class ControlCollection<E extends Control> implements List<E> {
     /*
      * 1. The collection must be in the same package of Control to be possible to call the
      *    onAddToCollection and onRemoveFromCollection methods. We think to be unnecessary to use observers
@@ -50,22 +56,22 @@ class ControlCollection implements List<Control> {
      *    Therefore, we decided to use List and restrict duplicate elements by ourselves.
      */
     
-    private final ContainerControl owner;
-    // Doing by composition makes possible to change the inner list type, if necessary.
-    private final List<Control> innerList;
+    private final ContainerControl<?> owner;
+    // Doing by composition makes possible to change the inner list type, if necessary, without any changes to the API.
+    private final List<E> innerList;
     
-    public ControlCollection(ContainerControl owner) {
+    public ControlCollection(ContainerControl<?> owner) {
         // The Longest Common Subsequence algorithm requires a lot of access by index, so the use of an ArrayList.
-        this(owner, new ArrayList<Control>());
+        this(owner, new ArrayList<>());
     }
     
-    private ControlCollection(ContainerControl owner, List<Control> innerList) {
+    private ControlCollection(ContainerControl<?> owner, List<E> innerList) {
         this.owner = Objects.requireNonNull(owner, ErrorMessage.CONTROL_COLLECTION_MUST_HAVE_OWNER.getMessage());
         this.innerList = innerList;
     }
     
     @Override
-    public boolean add(Control control) {
+    public boolean add(E control) {
         if (control.getParent() == this.owner) {
             // Send the control to the end of the list
             this.innerList.remove(control);
@@ -77,7 +83,7 @@ class ControlCollection implements List<Control> {
     }
     
     @Override
-    public void add(int index, Control control) {
+    public void add(int index, E control) {
         if (control.getParent() == this.owner) {
             this.innerList.remove(control);
         } else {
@@ -88,10 +94,10 @@ class ControlCollection implements List<Control> {
     }
     
     @Override
-    public boolean addAll(Collection<? extends Control> c) {
-        Set<Control> uniqueCollection = new LinkedHashSet<>(c);
+    public boolean addAll(Collection<? extends E> c) {
+        Set<E> uniqueCollection = new LinkedHashSet<>(c);
         
-        for (Control control : uniqueCollection) {
+        for (E control : uniqueCollection) {
             if (control.getParent() == this.owner) {
                 this.innerList.remove(control);
             } else {
@@ -103,10 +109,10 @@ class ControlCollection implements List<Control> {
     }
     
     @Override
-    public boolean addAll(int index, Collection<? extends Control> c) {
-        Set<Control> uniqueCollection = new LinkedHashSet<>(c);
+    public boolean addAll(int index, Collection<? extends E> c) {
+        Set<E> uniqueCollection = new LinkedHashSet<>(c);
         
-        for (Control control : uniqueCollection) {
+        for (E control : uniqueCollection) {
             if (control.getParent() == this.owner) {
                 this.innerList.remove(control);
             } else {
@@ -118,8 +124,8 @@ class ControlCollection implements List<Control> {
     }
     
     @Override
-    public Control set(int index, Control control) {
-        Control previousControl;
+    public E set(int index, E control) {
+        E previousControl;
         
         if (control.getParent() == this.owner) {
             previousControl = this.innerList.get(index);
@@ -149,8 +155,8 @@ class ControlCollection implements List<Control> {
     }
     
     @Override
-    public Control remove(int index) {
-        Control removedControl = this.innerList.remove(index);
+    public E remove(int index) {
+        E removedControl = this.innerList.remove(index);
         removedControl.onRemoveFromCollection();
         
         return removedControl;
@@ -172,7 +178,7 @@ class ControlCollection implements List<Control> {
     
     @Override
     public boolean retainAll(Collection<?> c) {
-        for (Control control : this.innerList) {
+        for (E control : this.innerList) {
             if (!c.contains(control)) {
                 control.onRemoveFromCollection();
             }
@@ -183,7 +189,7 @@ class ControlCollection implements List<Control> {
     
     @Override
     public void clear() {
-        for (Control control : this.innerList) {
+        for (E control : this.innerList) {
             control.onRemoveFromCollection();
         }
         
@@ -191,46 +197,46 @@ class ControlCollection implements List<Control> {
     }
     
     @Override
-    public ControlCollection subList(int fromIndex, int toIndex) {
-        List<Control> subList = this.innerList.subList(fromIndex, toIndex);
+    public ControlCollection<E> subList(int fromIndex, int toIndex) {
+        List<E> subList = this.innerList.subList(fromIndex, toIndex);
         
-        return new ControlCollection(this.owner, subList);
+        return new ControlCollection<>(this.owner, subList);
     }
     
     @Override
-    public Iterator<Control> iterator() {
+    public Iterator<E> iterator() {
         return new ControlCollectionIterator(this.innerList.iterator());
     }
     
     @Override
-    public ListIterator<Control> listIterator() {
+    public ListIterator<E> listIterator() {
         return new ControlCollectionListIterator(this.innerList.listIterator());
     }
     
     @Override
-    public ListIterator<Control> listIterator(int index) {
+    public ListIterator<E> listIterator(int index) {
         return new ControlCollectionListIterator(this.innerList.listIterator(index));
     }
     
-    private class ControlCollectionIterator implements Iterator<Control> {
-        private final Iterator<Control> innerIterator;
-        private Control lastReturnedElement;
+    private class ControlCollectionIterator implements Iterator<E> {
+        private final Iterator<E> innerIterator;
+        private E lastReturnedElement;
         
-        public ControlCollectionIterator(Iterator<Control> innerIterator) {
+        public ControlCollectionIterator(Iterator<E> innerIterator) {
             this.innerIterator = innerIterator;
         }
         
-        protected Control getLastReturnedElement() {
+        protected E getLastReturnedElement() {
             return this.lastReturnedElement;
         }
         
-        protected void setLastReturnedElement(Control lastReturnedElement) {
+        protected void setLastReturnedElement(E lastReturnedElement) {
             this.lastReturnedElement = lastReturnedElement;
         }
         
         @Override
-        public Control next() {
-            Control next = this.innerIterator.next();
+        public E next() {
+            E next = this.innerIterator.next();
             this.setLastReturnedElement(next);
             
             return next;
@@ -248,24 +254,24 @@ class ControlCollection implements List<Control> {
         }
     }
     
-    private class ControlCollectionListIterator extends ControlCollectionIterator implements ListIterator<Control> {
-        private final ListIterator<Control> innerIterator;
+    private class ControlCollectionListIterator extends ControlCollectionIterator implements ListIterator<E> {
+        private final ListIterator<E> innerIterator;
         
-        public ControlCollectionListIterator(ListIterator<Control> innerIterator) {
+        public ControlCollectionListIterator(ListIterator<E> innerIterator) {
             super(innerIterator);
             this.innerIterator = innerIterator;
         }
         
         @Override
-        public Control previous() {
-            Control previous = this.innerIterator.previous();
+        public E previous() {
+            E previous = this.innerIterator.previous();
             this.setLastReturnedElement(previous);
             
             return previous;
         }
         
         @Override
-        public void add(Control control) {
+        public void add(E control) {
             if (control.getParent() != ControlCollection.this.owner) {
                 this.innerIterator.add(control);
                 control.onAddToCollection(ControlCollection.this.owner);
@@ -280,7 +286,7 @@ class ControlCollection implements List<Control> {
         }
         
         @Override
-        public void set(Control control) {
+        public void set(E control) {
             if (control.getParent() != ControlCollection.this.owner) {
                 this.innerIterator.set(control);
                 
@@ -321,7 +327,7 @@ class ControlCollection implements List<Control> {
     }
     
     @Override
-    public Control get(int index) {
+    public E get(int index) {
         return this.innerList.get(index);
     }
     

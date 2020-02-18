@@ -32,8 +32,8 @@ import java.lang.annotation.Target;
 
 import org.springframework.context.annotation.Import;
 
+import io.gazeui.WebPage;
 import io.gazeui.springboot.configuration.WebConfiguration;
-import io.gazeui.Window;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
@@ -41,7 +41,7 @@ import io.gazeui.Window;
 @Import(WebConfiguration.class)
 public @interface EnableGazeUI {
     
-    Class<? extends Window> mainWindowClass();
+    Class<? extends WebPage> initialPage();
     
     String basePath() default "";
 }

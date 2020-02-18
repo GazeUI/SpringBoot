@@ -29,79 +29,46 @@ import java.lang.reflect.Method;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import io.gazeui.text.Strings;
+public class Window extends ContainerControl<WebPage> {
 
-public abstract class Window extends ContainerControl {
-
-    public static Window createInstance(Class<? extends Window> windowSubclass) {
+    // Ideally this class would be declared final and with a private constructor, but none of these options work because
+    // this class is used as a Spring component.
+    
+    private static final String WINDOW_ID = "window";
+    private static final String PAGE_ID = "page";
+    
+    public static Window createInstance(Class<? extends WebPage> initialPageClass) {
+        WebPage initialPage;
+        
         try {
-            Window viewStateWindow = windowSubclass.getDeclaredConstructor().newInstance();
-            return viewStateWindow;
+            initialPage = initialPageClass.getDeclaredConstructor().newInstance();
         } catch (InvocationTargetException ex) {
-            // Rethrow the any possible exception thrown by the Window subclass constructor
+            // Rethrow any possible exception thrown by the WebPage subclass constructor
             throw new RuntimeException(ex.getCause());
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                 | NoSuchMethodException | SecurityException ex) {
-            throw new GazeUIException(ErrorMessage.UNEXPECTED_ERROR_CREATING_MAIN_WINDOW.getMessage(), ex);
+            throw new GazeUIException(ErrorMessage.UNEXPECTED_ERROR_CREATING_INITIAL_PAGE.getMessage(), ex);
         }
+        
+        return new Window(initialPage);
     }
     
-    private String title;
-    // The client ID must be unique per browser window because it will be used as the HTML ID attribute.
-    private int controlsCounter = 0;
-    
-    public Window() {
+    public Window(WebPage initialPage) {
+        this.getControls().add(initialPage);
     }
     
-    public Window(String title) {
-        this.setTitle(title);
-    }
-    
-    public String getTitle() {
-        return this.title;
-    }
-
-    public void setTitle(String title) {
-        if (!Strings.isNullOrBlank(title)) {
-            this.title = title;
+    public Optional<WebPage> getChildPage() {
+        if (!this.getControls().isEmpty()) {
+            return Optional.of(this.getControls().get(0));
         } else {
-            throw new IllegalArgumentException(ErrorMessage.HTML_VALIDATION_TITLE_MUST_NOT_BE_EMPTY.getMessage());
+            return Optional.empty();
         }
-    }
-    
-    String generateAutomaticControlId() {
-        return String.format("ctl%02d", ++this.controlsCounter);
     }
     
     @Override
     public Window clone() {
         // This method is only to make the clone method visible to the GazeUIController.
         return (Window)super.clone();
-    }
-    
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder(super.toString());
-        sb.append(String.format(", Title: '%s'", Optional.ofNullable(this.getTitle()).orElse("")));
-        
-        return sb.toString();
-    }
-    
-    @Override
-    protected String creationScript() {
-        // It is not necessary to create a container for the Window, because document.body will be used as such.
-        return "";
-    }
-    
-    @Override
-    protected String selectionScript() {
-        // It is not necessary to run any selection script, because document.body can be directly accessed.
-        return "";
-    }
-    
-    @Override
-    protected String identificationToken() {
-        return "document.body";
     }
     
     @Override
@@ -114,44 +81,43 @@ public abstract class Window extends ContainerControl {
     }
     
     private void renderCreation(RenderScriptWriter writer) {
-        if (Strings.isNullOrBlank(this.getTitle())) {
-            // According to the HTML 5.2 specification, the title element must contain at least one non-whitespace
-            // character. See https://www.w3.org/TR/html52/document-metadata.html#the-title-element for details.
-            this.setTitle(this.getClass().getSimpleName());
-        }
-        
-        // TODO: JavaScript escape
-        writer.format("document.title = '%s';\n", this.getTitle());
-        
-        // Add the default ContainerControl script
-        super.render(writer, null);
+        this.getChildPage().ifPresent((WebPage page) -> {
+            page.render(writer, null);
+        });
     }
     
-    private void renderUpdate(RenderScriptWriter writer, Window previousControlState) {
-        if (!this.getTitle().equals(previousControlState.getTitle())) {
-            // TODO: JavaScript escape
-            writer.format("document.title = '%s';\n", this.getTitle());
+    private void renderUpdate(RenderScriptWriter writer, Window previousWindow) {
+        if (this.getChildPage().isPresent() && previousWindow.getChildPage().isPresent() &&
+                this.getChildPage().get().getClass() == previousWindow.getChildPage().get().getClass()) {
+            // Update
+            this.getChildPage().get().render(writer, previousWindow.getChildPage().get());
+        } else {
+            previousWindow.getChildPage().ifPresent((WebPage previousPage) -> {
+                writer.importModule("DomFunctions", "./dom-functions.mjs");
+                writer.println("DomFunctions.clearCurrentWebPage();");
+            });
+            
+            this.getChildPage().ifPresent((WebPage page) -> {
+                page.render(writer, null);
+            });
         }
-        
-        // Add the default ContainerControl script
-        super.render(writer, previousControlState);
     }
     
     public void processUIEvent(String controlId, String eventName) {
-        Control control = this.getDescendantControlById(this, controlId);
+        Optional<Control> control = this.getDescendantControlById(controlId);
         
-        if (control != null) {
+        if (control.isPresent()) {
             String processEventMethodName = String.format("processOn%sEvent", eventName);
             
             try {
-                Method method = control.getClass().getDeclaredMethod(processEventMethodName);
-                method.invoke(control);
+                Method method = control.get().getClass().getDeclaredMethod(processEventMethodName);
+                method.invoke(control.get());
             } catch (InvocationTargetException ex) {
-                // Rethrow the any possible exception thrown by the Window subclass constructor
+                // Rethrow any possible exception thrown by the WebPage subclass constructor
                 throw new RuntimeException(ex.getCause());
             } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException ex) {
                 String errorMessage = String.format(ErrorMessage.UNEXPECTED_ERROR_PROCESSING_EVENT.getMessage(),
-                        eventName, control.toString());
+                        eventName, control.get().toString());
                 
                 throw new GazeUIException(errorMessage, ex);
             }
@@ -163,19 +129,42 @@ public abstract class Window extends ContainerControl {
         }
     }
     
-    private Control getDescendantControlById(ContainerControl ancestor, String controlId) {
+    @SuppressWarnings("unchecked")
+    private Optional<Control> getDescendantControlById(String controlId) {
+        switch (controlId) {
+        case WINDOW_ID:
+            return Optional.of(this);
+            
+        case PAGE_ID:
+            return (Optional<Control>)(Optional<?>)this.getChildPage();
+            
+        default:
+            Optional<WebPage> childPage = this.getChildPage();
+            
+            if (childPage.isPresent()) {
+                return this.getDescendantControlById(childPage.get(), controlId);
+            } else {
+                return Optional.empty();
+            }
+        }
+    }
+    
+    private Optional<Control> getDescendantControlById(ContainerControl<?> ancestor, String controlId) {
+        Optional<Control> foundControl = Optional.empty();
+        
         for (Control childControl : ancestor.getControls()) {
             if (childControl.getClientId().equals(controlId)) {
-                return childControl;
+                foundControl = Optional.of(childControl);
+                break;
             } else if (childControl instanceof ContainerControl) {
-                Control foundControl = this.getDescendantControlById((ContainerControl)childControl, controlId);
+                foundControl = this.getDescendantControlById((ContainerControl<?>)childControl, controlId);
                 
-                if (foundControl != null) {
-                    return foundControl;
+                if (foundControl.isPresent()) {
+                    break;
                 }
             }
         }
         
-        return null;
+        return foundControl;
     }
 }

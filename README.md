@@ -456,9 +456,9 @@ This project is licensed under the terms of the MIT license. See the [LICENSE](L
         <td align="center">79</td>
         <td align="center">67</td>
         <td align="center">63</td>
-        <td align="center">11.1</sup></td>
+        <td align="center">11.1</td>
         <td align="center">50</td>
-        <td align="center">11</sup></td>
+        <td align="center">11</td>
         <td align="center">76</td>
         <td align="center">46</td>
         <td align="center">79</td>
@@ -472,7 +472,7 @@ This project is licensed under the terms of the MIT license. See the [LICENSE](L
         <td align="center">12</td>
         <td align="center">3.5</td>
         <td align="center">5</td>
-        <td align="center">5</sup></td>
+        <td align="center">5</td>
         <td align="center">12.1</td>
         <td align="center">5</td>
         <td align="center">2.1</td>
@@ -482,6 +482,22 @@ This project is licensed under the terms of the MIT license. See the [LICENSE](L
         <td align="center">>=10.1</td>
         <td align="center">92.73%</td>
     </tr>
+    <tr>
+        <td align="center">Node .firstChild</td>
+        <td align="center">>=11</td>
+        <td align="center">>=12</td>
+        <td align="center">>=2</td>
+        <td align="center">>=80</td>
+        <td align="center">>=13</td>
+        <td align="center">>=66</td>
+        <td align="center">>=13.2</td>
+        <td align="center">>=76</td>
+        <td align="center">>=46</td>
+        <td align="center">>=79</td>
+        <td align="center">>=68</td>
+        <td align="center">>=10.1</td>
+        <td align="center">56.9%</td>
+    </tr>
 </tbody>
 <tfoot>
     <tr>
@@ -489,10 +505,10 @@ This project is licensed under the terms of the MIT license. See the [LICENSE](L
         <td align="center">-</td>
         <td align="center">79</td>
         <td align="center">67</td>
-        <td align="center">63</td>
-        <td align="center">11.1</td>
-        <td align="center">50</td>
-        <td align="center">11</td>
+        <td align="center">>=80</td>
+        <td align="center">>=13</td>
+        <td align="center">>=66</td>
+        <td align="center">>=13.2</td>
         <td align="center">76</td>
         <td align="center">46</td>
         <td align="center">79</td>

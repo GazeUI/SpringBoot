@@ -33,8 +33,8 @@ import org.springframework.web.context.annotation.SessionScope;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import io.gazeui.springboot.annotation.EnableGazeUI;
 import io.gazeui.Window;
+import io.gazeui.springboot.annotation.EnableGazeUI;
 
 @Configuration
 @ComponentScan("io.gazeui.springboot")
@@ -98,7 +98,7 @@ public class WebConfiguration {
     
     @Bean
     @SessionScope
-    public Window mainWindow() {
-        return Window.createInstance(this.enableGazeUIAnnotation.mainWindowClass());
+    public Window window() {
+        return Window.createInstance(this.enableGazeUIAnnotation.initialPage());
     }
 }

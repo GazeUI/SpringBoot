@@ -73,9 +73,9 @@ public class Label extends Control {
         }
     }
     
-    private void renderUpdate(RenderScriptWriter writer, Label previousControlState) {
+    private void renderUpdate(RenderScriptWriter writer, Label previousLabel) {
         String currentText = Optional.ofNullable(this.getText()).orElse("");
-        String previousText = Optional.ofNullable(previousControlState.getText()).orElse("");
+        String previousText = Optional.ofNullable(previousLabel.getText()).orElse("");
         
         if (!currentText.equals(previousText)) {
             writer.print(this.selectionScript());

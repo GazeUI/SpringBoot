@@ -146,19 +146,19 @@ public class Button extends Control {
         }
     }
     
-    private void renderUpdate(RenderScriptWriter writer, Button previousControlState) {
+    private void renderUpdate(RenderScriptWriter writer, Button previousButton) {
         RenderScriptWriter localWriter = new RenderScriptWriter();
         boolean moduleNeeded = false;
         
         String currentText = Optional.ofNullable(this.getText()).orElse("");
-        String previousText = Optional.ofNullable(previousControlState.getText()).orElse("");
+        String previousText = Optional.ofNullable(previousButton.getText()).orElse("");
         
         if (!currentText.equals(previousText)) {
             // TODO: JavaScript escape
             localWriter.format("%s.textContent = '%s';\n", this.getClientId(), currentText);
         }
         
-        if (previousControlState.getClickHandlers().isEmpty() &&
+        if (previousButton.getClickHandlers().isEmpty() &&
                 this.clickHandlers != null && !this.clickHandlers.isEmpty()) {
             moduleNeeded = true;
             
@@ -168,7 +168,7 @@ public class Button extends Control {
                 "    capture: false,\n" +
                 "    passive: true\n" +
                 "});\n");
-        } else if (!previousControlState.getClickHandlers().isEmpty() && this.getClickHandlers().isEmpty()) {
+        } else if (!previousButton.getClickHandlers().isEmpty() && this.getClickHandlers().isEmpty()) {
             moduleNeeded = true;
             
             localWriter.format("%s.removeEventListener('click', %s.onClickHandler, {\n", this.getClientId(),
