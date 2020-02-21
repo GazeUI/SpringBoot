@@ -43,44 +43,16 @@ public class WebConfiguration {
     private static final String CLASSPATH_STATIC_RESOURCE_LOCATION = "classpath:/static/";
     
     private final EnableGazeUI enableGazeUIAnnotation;
-    private String htmlBaseUrl;
     
     @Autowired
     public WebConfiguration(ApplicationContext applicationContext) {
         // Get the first EnableGazeUI annotation and ignore the other ones
         String beanNameWithEnableGazeUI = applicationContext.getBeanNamesForAnnotation(EnableGazeUI.class)[0];
         this.enableGazeUIAnnotation = applicationContext.findAnnotationOnBean(beanNameWithEnableGazeUI, EnableGazeUI.class);
-        
-        this.setHtmlBaseUrl(this.enableGazeUIAnnotation.basePath());
-    }
-    
-    private void setHtmlBaseUrl(String gazeUIBasePath) {
-        // Set a <base> element is necessary because 'child-path' relative to 'http://localhost/parent-path/' is
-        // 'http://localhost/parent-path/child-path' but 'child-path' relative to 'http://localhost/parent-path' is
-        // 'http://localhost/child-path'.
-        // So when the GazeUI base path is '/level1/level2', for example, we have to set the HTML base element
-        // to 'level2/'.
-        if (gazeUIBasePath.isEmpty() || gazeUIBasePath.endsWith("/")) {
-            this.htmlBaseUrl = null;
-        } else {
-            int posLastSlash = gazeUIBasePath.lastIndexOf("/");
-            
-            if (posLastSlash != -1) {
-                this.htmlBaseUrl = gazeUIBasePath.substring(posLastSlash + 1);
-            } else {
-                this.htmlBaseUrl = gazeUIBasePath;
-            }
-            
-            this.htmlBaseUrl += "/";
-        }
     }
     
     public EnableGazeUI getEnableGazeUIAnnotation() {
         return this.enableGazeUIAnnotation;
-    }
-    
-    public String getHtmlBaseUrl() {
-        return this.htmlBaseUrl;
     }
     
     @Bean

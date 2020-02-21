@@ -24,6 +24,8 @@
 
 package io.gazeui;
 
+import java.util.Optional;
+
 public abstract class Control implements Cloneable {
     
     private ContainerControl<?> parent;
@@ -33,50 +35,46 @@ public abstract class Control implements Cloneable {
     // in the render method, but this would be another step that could overload the render process.
     private String clientId;
     
-    public ContainerControl<?> getParent() {
-        return this.parent;
+    public Optional<ContainerControl<?>> getParent() {
+        return Optional.ofNullable(this.parent);
     }
     
-    public WebPage getPage() {
+    public Optional<WebPage> getPage() {
         if (this.page == null) {
-            Control control = this;
+            Optional<? extends Control> control = Optional.of(this);
             
-            while (control != null && !(control instanceof WebPage)) {
-                control = control.getParent();
+            while (control.filter(c -> !(c instanceof WebPage)).isPresent()) {
+                control = control.get().getParent();
             }
             
-            this.page = (WebPage)control;
+            this.page = (WebPage)control.orElse(null);
         }
         
-        return this.page;
+        return Optional.ofNullable(this.page);
     }
     
-    public Window getWindow() {
-        WebPage page = this.getPage();
-        
-        if (page != null) {
-            return (Window)page.getParent();
-        } else {
-            return null;
-        }
+    public Optional<Window> getWindow() {
+        return this.getPage()
+                .flatMap(page -> page.getParent())
+                .map(parent -> (Window)parent);
     }
     
-    public String getClientId() {
-        return this.clientId;
+    public Optional<String> getClientId() {
+        return Optional.ofNullable(this.clientId);
     }
     
     void onAddToCollection(ContainerControl<?> parent) {
-        boolean isControlWithoutPage = this.getPage() == null;
+        boolean isControlWithoutPage = !this.getPage().isPresent();
         
         // Remove the new control from its old parent (if any)
-        if (this.getParent() != null) {
+        this.getParent().ifPresent(oldParent -> {
             // The remove method will call onBeforeRemoveFromCollection
-            this.getParent().getControls().remove(this);
-        }
+            oldParent.getControls().remove(this);
+        });
         
         this.parent = parent;
         
-        if (this.getPage() != null && isControlWithoutPage) {
+        if (this.getPage().isPresent() && isControlWithoutPage) {
             // When a control gain a WebPage, we must set the ID of the control and all its descendants
             this.setControlTreeIds(this);
         }
@@ -89,8 +87,8 @@ public abstract class Control implements Cloneable {
         //    have a client ID. Because of this, we need to traverse all the tree to reach these controls.
         //
         // 2. The control ID will be preserved.
-        if (control.getClientId() == null) {
-            control.clientId = this.getPage().generateAutomaticControlId();
+        if (!control.getClientId().isPresent()){
+            control.clientId = this.getPage().get().generateAutomaticControlId();
         }
         
         if (control instanceof ContainerControl) {
@@ -131,11 +129,9 @@ public abstract class Control implements Cloneable {
     
     @Override
     public String toString() {
-        if (this.getClientId() != null) {
-            return String.format("%s, Id: '%s'", this.getClass().getSimpleName(), this.getClientId());
-        } else {
-            return this.getClass().getSimpleName() + "@" + Integer.toHexString(this.hashCode());
-        }
+        return this.getClientId()
+                .map(clientId -> String.format("%s, Id: '%s'", this.getClass().getSimpleName(), clientId))
+                .orElseGet(() -> this.getClass().getSimpleName() + "@" + Integer.toHexString(this.hashCode()));
     }
     
     /**
@@ -143,7 +139,7 @@ public abstract class Control implements Cloneable {
      * to use the token returned by the {@link #identificationToken()} method to reach the control.
      */
     protected String selectionScript() {
-        return String.format("let %1$s = document.getElementById('%1$s');\n", this.getClientId());
+        return String.format("let %1$s = document.getElementById('%1$s');\n", this.getClientId().get());
     }
     
     /**
@@ -151,8 +147,9 @@ public abstract class Control implements Cloneable {
      * control's rendering script or after running the script returned by the {@link #selectionScript()} method.
      */
     protected String identificationToken() {
-        return this.getClientId();
+        return this.getClientId().get();
     }
     
-    protected abstract void render(RenderScriptWriter writer, Control previousControlState);
+    protected abstract void renderCreation(RenderScriptWriter writer);
+    protected abstract void renderUpdate(RenderScriptWriter writer, Control previousControlState);
 }

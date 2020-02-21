@@ -46,17 +46,9 @@ public class Label extends Control {
     }
     
     @Override
-    protected void render(RenderScriptWriter writer, Control previousControlState) {
-        if (previousControlState == null) {
-            this.renderCreation(writer);
-        } else {
-            this.renderUpdate(writer, (Label)previousControlState);
-        }
-    }
-    
-    private void renderCreation(RenderScriptWriter writer) {
-        writer.format("let %s = document.createElement('span');\n", this.getClientId());
-        writer.format("%1$s.id = '%1$s';\n", this.getClientId());
+    protected void renderCreation(RenderScriptWriter writer) {
+        writer.format("let %s = document.createElement('span');\n", this.getClientId().get());
+        writer.format("%1$s.id = '%1$s';\n", this.getClientId().get());
         
         // According to the MDN website¹:
         //
@@ -69,11 +61,13 @@ public class Label extends Control {
         
         if (this.getText() != null && !this.getText().isEmpty()) {
             // TODO: JavaScript escape
-            writer.format("%s.textContent = '%s';\n", this.getClientId(), this.getText());
+            writer.format("%s.textContent = '%s';\n", this.getClientId().get(), this.getText());
         }
     }
     
-    private void renderUpdate(RenderScriptWriter writer, Label previousLabel) {
+    @Override
+    protected void renderUpdate(RenderScriptWriter writer, Control previousControlState) {
+        Label previousLabel = (Label)previousControlState;
         String currentText = Optional.ofNullable(this.getText()).orElse("");
         String previousText = Optional.ofNullable(previousLabel.getText()).orElse("");
         
@@ -81,7 +75,7 @@ public class Label extends Control {
             writer.print(this.selectionScript());
             
             // TODO: JavaScript escape
-            writer.format("%s.textContent = '%s';\n", this.getClientId(), currentText);
+            writer.format("%s.textContent = '%s';\n", this.getClientId().get(), currentText);
         }
     }
 }

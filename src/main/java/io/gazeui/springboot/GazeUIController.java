@@ -24,6 +24,8 @@
 
 package io.gazeui.springboot;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -92,10 +94,10 @@ public class GazeUIController {
                     "  <meta charset='UTF-8'>\n" + 
                     "  <title></title>\n");
             
-            if (this.gazeUIWebConfig.getHtmlBaseUrl() != null) {
+            this.getHtmlBaseUrl().ifPresent(htmlBaseUrl -> {
                 // A base element is necessary when the GazeUI base path does not end in '/'
-                sbInitialHtml.append(String.format("  <base href='%s'>\n", this.gazeUIWebConfig.getHtmlBaseUrl()));
-            }
+                sbInitialHtml.append(String.format("  <base href='%s'>\n", htmlBaseUrl));
+            });
             
             // Modules are deferred and use strict mode automatically. A deferred script is executed after the document
             // has been parsed. This behavior is necessary because the page contents must be available in order to the
@@ -115,12 +117,39 @@ public class GazeUIController {
         return this.initialHtml;
     }
     
+    private Optional<String> getHtmlBaseUrl() {
+        // Set a <base> element is necessary because 'child-path' relative to 'http://localhost/parent-path/' is
+        // 'http://localhost/parent-path/child-path' but 'child-path' relative to 'http://localhost/parent-path' is
+        // 'http://localhost/child-path'.
+        // So when the GazeUI base path is '/level1/level2', for example, we have to set the HTML base element
+        // to 'level2/'.
+        
+        String gazeUIBasePath = this.gazeUIWebConfig.getEnableGazeUIAnnotation().basePath();
+        String htmlBaseUrl;
+        
+        if (gazeUIBasePath.isEmpty() || gazeUIBasePath.endsWith("/")) {
+            htmlBaseUrl = null;
+        } else {
+            int posLastSlash = gazeUIBasePath.lastIndexOf("/");
+            
+            if (posLastSlash != -1) {
+                htmlBaseUrl = gazeUIBasePath.substring(posLastSlash + 1);
+            } else {
+                htmlBaseUrl = gazeUIBasePath;
+            }
+            
+            htmlBaseUrl += "/";
+        }
+        
+        return Optional.ofNullable(htmlBaseUrl);
+    }
+    
     @GetMapping(
             path = "/" + GazeUIController.CREATE_INITIAL_UI_URL_PATH,
             produces = MediaTypeExtensions.TEXT_JAVASCRIPT_VALUE)
     public String getInitialUICreationScript() {
         RenderScriptWriter writer = new RenderScriptWriter(RenderScriptWriter.USE_STATIC_IMPORTS);
-        this.viewStateWindow.render(writer, null);
+        this.viewStateWindow.renderCreation(writer);
         
         return writer.toString();
     }
@@ -152,7 +181,7 @@ public class GazeUIController {
         //     [6]: https://github.com/ModuleLoader/es-module-loader
         //     [7]: https://github.com/tc39/proposal-dynamic-import
         RenderScriptWriter writer = new RenderScriptWriter(RenderScriptWriter.USE_DYNAMIC_IMPORTS);
-        this.viewStateWindow.render(writer, previousViewStateWindow);
+        this.viewStateWindow.renderUpdate(writer, previousViewStateWindow);
         
         if (!writer.isEmpty()) {
             StringBuilder sbScript = new StringBuilder();

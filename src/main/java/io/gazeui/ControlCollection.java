@@ -72,7 +72,8 @@ class ControlCollection<E extends Control> implements List<E> {
     
     @Override
     public boolean add(E control) {
-        if (control.getParent() == this.owner) {
+        // The ifPresentOrElse method is only available for Java 9 and later
+        if (control.getParent().filter(p -> p == this.owner).isPresent()) {
             // Send the control to the end of the list
             this.innerList.remove(control);
         } else {
@@ -84,7 +85,7 @@ class ControlCollection<E extends Control> implements List<E> {
     
     @Override
     public void add(int index, E control) {
-        if (control.getParent() == this.owner) {
+        if (control.getParent().filter(p -> p == this.owner).isPresent()) {
             this.innerList.remove(control);
         } else {
             control.onAddToCollection(this.owner);
@@ -98,7 +99,7 @@ class ControlCollection<E extends Control> implements List<E> {
         Set<E> uniqueCollection = new LinkedHashSet<>(c);
         
         for (E control : uniqueCollection) {
-            if (control.getParent() == this.owner) {
+            if (control.getParent().filter(p -> p == this.owner).isPresent()) {
                 this.innerList.remove(control);
             } else {
                 control.onAddToCollection(this.owner);
@@ -113,7 +114,7 @@ class ControlCollection<E extends Control> implements List<E> {
         Set<E> uniqueCollection = new LinkedHashSet<>(c);
         
         for (E control : uniqueCollection) {
-            if (control.getParent() == this.owner) {
+            if (control.getParent().filter(p -> p == this.owner).isPresent()) {
                 this.innerList.remove(control);
             } else {
                 control.onAddToCollection(this.owner);
@@ -127,7 +128,7 @@ class ControlCollection<E extends Control> implements List<E> {
     public E set(int index, E control) {
         E previousControl;
         
-        if (control.getParent() == this.owner) {
+        if (control.getParent().filter(p -> p == this.owner).isPresent()) {
             previousControl = this.innerList.get(index);
             
             // Once we are forcing unique items on the list, it is necessary only to remove the first occurrence.
@@ -272,7 +273,7 @@ class ControlCollection<E extends Control> implements List<E> {
         
         @Override
         public void add(E control) {
-            if (control.getParent() != ControlCollection.this.owner) {
+            if (!control.getParent().filter(p -> p == ControlCollection.this.owner).isPresent()) {
                 this.innerIterator.add(control);
                 control.onAddToCollection(ControlCollection.this.owner);
             } else {
@@ -287,7 +288,7 @@ class ControlCollection<E extends Control> implements List<E> {
         
         @Override
         public void set(E control) {
-            if (control.getParent() != ControlCollection.this.owner) {
+            if (!control.getParent().filter(p -> p == ControlCollection.this.owner).isPresent()) {
                 this.innerIterator.set(control);
                 
                 this.getLastReturnedElement().onRemoveFromCollection();

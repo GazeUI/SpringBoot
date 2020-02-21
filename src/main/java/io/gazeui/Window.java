@@ -29,6 +29,8 @@ import java.lang.reflect.Method;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import io.gazeui.util.OptionalExtensions;
+
 public class Window extends ContainerControl<WebPage> {
 
     // Ideally this class would be declared final and with a private constructor, but none of these options work because
@@ -72,25 +74,20 @@ public class Window extends ContainerControl<WebPage> {
     }
     
     @Override
-    public void render(RenderScriptWriter writer, Control previousControlState) {
-        if (previousControlState == null) {
-            this.renderCreation(writer);
-        } else {
-            this.renderUpdate(writer, (Window)previousControlState);
-        }
-    }
-    
-    private void renderCreation(RenderScriptWriter writer) {
+    public void renderCreation(RenderScriptWriter writer) {
         this.getChildPage().ifPresent((WebPage page) -> {
-            page.render(writer, null);
+            page.renderCreation(writer);
         });
     }
     
-    private void renderUpdate(RenderScriptWriter writer, Window previousWindow) {
+    @Override
+    public void renderUpdate(RenderScriptWriter writer, Control previousControlState) {
+        Window previousWindow = (Window)previousControlState;
+        
         if (this.getChildPage().isPresent() && previousWindow.getChildPage().isPresent() &&
                 this.getChildPage().get().getClass() == previousWindow.getChildPage().get().getClass()) {
             // Update
-            this.getChildPage().get().render(writer, previousWindow.getChildPage().get());
+            this.getChildPage().get().renderUpdate(writer, previousWindow.getChildPage().get());
         } else {
             previousWindow.getChildPage().ifPresent((WebPage previousPage) -> {
                 writer.importModule("DomFunctions", "./dom-functions.mjs");
@@ -98,54 +95,48 @@ public class Window extends ContainerControl<WebPage> {
             });
             
             this.getChildPage().ifPresent((WebPage page) -> {
-                page.render(writer, null);
+                page.renderCreation(writer);
             });
         }
     }
     
     public void processUIEvent(String controlId, String eventName) {
-        Optional<Control> control = this.getDescendantControlById(controlId);
+        Optional<? extends Control> optionalControl = this.getDescendantControlById(controlId);
         
-        if (control.isPresent()) {
+        OptionalExtensions.ifPresentOrElseThrow(optionalControl, control -> {
             String processEventMethodName = String.format("processOn%sEvent", eventName);
             
             try {
-                Method method = control.get().getClass().getDeclaredMethod(processEventMethodName);
-                method.invoke(control.get());
+                Method method = control.getClass().getDeclaredMethod(processEventMethodName);
+                method.invoke(control);
             } catch (InvocationTargetException ex) {
                 // Rethrow any possible exception thrown by the WebPage subclass constructor
                 throw new RuntimeException(ex.getCause());
             } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException ex) {
                 String errorMessage = String.format(ErrorMessage.UNEXPECTED_ERROR_PROCESSING_EVENT.getMessage(),
-                        eventName, control.get().toString());
+                        eventName, control.toString());
                 
                 throw new GazeUIException(errorMessage, ex);
             }
-        } else {
+        }, () -> {
             String errorMessage = String.format(ErrorMessage.COULD_NOT_PROCESS_EVENT_CONTROL_ID_NOT_FOUND.getMessage(),
                     eventName, controlId);
             
-            throw new NoSuchElementException(errorMessage);
-        }
+            return new NoSuchElementException(errorMessage);
+        });
     }
     
-    @SuppressWarnings("unchecked")
-    private Optional<Control> getDescendantControlById(String controlId) {
+    private Optional<? extends Control> getDescendantControlById(String controlId) {
         switch (controlId) {
         case WINDOW_ID:
             return Optional.of(this);
             
         case PAGE_ID:
-            return (Optional<Control>)(Optional<?>)this.getChildPage();
+            return this.getChildPage();
             
         default:
-            Optional<WebPage> childPage = this.getChildPage();
-            
-            if (childPage.isPresent()) {
-                return this.getDescendantControlById(childPage.get(), controlId);
-            } else {
-                return Optional.empty();
-            }
+            // If it is neither the window nor the page, look at their descendant controls
+            return this.getChildPage().flatMap(page -> this.getDescendantControlById(page, controlId));
         }
     }
     
@@ -153,7 +144,7 @@ public class Window extends ContainerControl<WebPage> {
         Optional<Control> foundControl = Optional.empty();
         
         for (Control childControl : ancestor.getControls()) {
-            if (childControl.getClientId().equals(controlId)) {
+            if (childControl.getClientId().get().equals(controlId)) {
                 foundControl = Optional.of(childControl);
                 break;
             } else if (childControl instanceof ContainerControl) {

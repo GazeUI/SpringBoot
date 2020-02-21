@@ -101,19 +101,11 @@ public class Button extends Control {
     }
     
     @Override
-    protected void render(RenderScriptWriter writer, Control previousControlState) {
-        if (previousControlState == null) {
-            this.renderCreation(writer);
-        } else {
-            this.renderUpdate(writer, (Button)previousControlState);
-        }
-    }
-    
-    private void renderCreation(RenderScriptWriter writer) {
+    protected void renderCreation(RenderScriptWriter writer) {
         boolean moduleNeeded = false;
         
-        writer.format("let %s = document.createElement('button');\n", this.getClientId());
-        writer.format("%1$s.id = '%1$s';\n", this.getClientId());
+        writer.format("let %s = document.createElement('button');\n", this.getClientId().get());
+        writer.format("%1$s.id = '%1$s';\n", this.getClientId().get());
         
         // According to the MDN website¹:
         //
@@ -126,7 +118,7 @@ public class Button extends Control {
         
         if (this.getText() != null && !this.getText().isEmpty()) {
             // TODO: JavaScript escape
-            writer.format("%s.textContent = '%s';\n", this.getClientId(), this.getText());
+            writer.format("%s.textContent = '%s';\n", this.getClientId().get(), this.getText());
         }
         
         // Here we are accessing the variable directly to avoid the unnecessary creation of the collection
@@ -134,7 +126,7 @@ public class Button extends Control {
         if (this.clickHandlers != null && !this.clickHandlers.isEmpty()) {
             moduleNeeded = true;
             
-            writer.format("%s.addEventListener('click', %s.onClickHandler, {\n", this.getClientId(), MODULE_NAME);
+            writer.format("%s.addEventListener('click', %s.onClickHandler, {\n", this.getClientId().get(), MODULE_NAME);
             writer.print(
                 "    capture: false,\n" +
                 "    passive: true\n" +
@@ -146,7 +138,9 @@ public class Button extends Control {
         }
     }
     
-    private void renderUpdate(RenderScriptWriter writer, Button previousButton) {
+    @Override
+    protected void renderUpdate(RenderScriptWriter writer, Control previousControlState) {
+        Button previousButton = (Button)previousControlState;
         RenderScriptWriter localWriter = new RenderScriptWriter();
         boolean moduleNeeded = false;
         
@@ -155,14 +149,14 @@ public class Button extends Control {
         
         if (!currentText.equals(previousText)) {
             // TODO: JavaScript escape
-            localWriter.format("%s.textContent = '%s';\n", this.getClientId(), currentText);
+            localWriter.format("%s.textContent = '%s';\n", this.getClientId().get(), currentText);
         }
         
         if (previousButton.getClickHandlers().isEmpty() &&
                 this.clickHandlers != null && !this.clickHandlers.isEmpty()) {
             moduleNeeded = true;
             
-            localWriter.format("%s.addEventListener('click', %s.onClickHandler, {\n", this.getClientId(),
+            localWriter.format("%s.addEventListener('click', %s.onClickHandler, {\n", this.getClientId().get(),
                     MODULE_NAME);
             localWriter.print(
                 "    capture: false,\n" +
@@ -171,7 +165,7 @@ public class Button extends Control {
         } else if (!previousButton.getClickHandlers().isEmpty() && this.getClickHandlers().isEmpty()) {
             moduleNeeded = true;
             
-            localWriter.format("%s.removeEventListener('click', %s.onClickHandler, {\n", this.getClientId(),
+            localWriter.format("%s.removeEventListener('click', %s.onClickHandler, {\n", this.getClientId().get(),
                     MODULE_NAME);
             localWriter.print(
                 "    capture: false,\n" +

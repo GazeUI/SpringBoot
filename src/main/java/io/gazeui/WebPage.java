@@ -67,7 +67,7 @@ public abstract class WebPage extends ContainerControl<Control> {
     
     @Override
     protected String creationScript() {
-        // It is not necessary to create a container for the Window, because document.body will be used as such.
+        // It is not necessary to create a container for the Page, because document.body will be used as such.
         return "";
     }
     
@@ -83,15 +83,7 @@ public abstract class WebPage extends ContainerControl<Control> {
     }
     
     @Override
-    protected void render(RenderScriptWriter writer, Control previousControlState) {
-        if (previousControlState == null) {
-            this.renderCreation(writer);
-        } else {
-            this.renderUpdate(writer, (WebPage)previousControlState);
-        }
-    }
-    
-    private void renderCreation(RenderScriptWriter writer) {
+    protected void renderCreation(RenderScriptWriter writer) {
         if (Strings.isNullOrBlank(this.getTitle())) {
             // According to the HTML 5.2 specification, the title element must contain at least one non-whitespace
             // character. See https://www.w3.org/TR/html52/document-metadata.html#the-title-element for details.
@@ -102,16 +94,19 @@ public abstract class WebPage extends ContainerControl<Control> {
         writer.format("document.title = '%s';\n", this.getTitle());
         
         // Add the default ContainerControl script
-        super.render(writer, null);
+        super.renderCreation(writer);
     }
     
-    private void renderUpdate(RenderScriptWriter writer, WebPage previousPage) {
+    @Override
+    protected void renderUpdate(RenderScriptWriter writer, Control previousControlState) {
+        WebPage previousPage = (WebPage)previousControlState;
+        
         if (!this.getTitle().equals(previousPage.getTitle())) {
             // TODO: JavaScript escape
             writer.format("document.title = '%s';\n", this.getTitle());
         }
         
         // Add the default ContainerControl script
-        super.render(writer, previousPage);
+        super.renderUpdate(writer, previousPage);
     }
 }

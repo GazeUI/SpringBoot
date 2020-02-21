@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 import io.gazeui.collections.Lists;
@@ -42,14 +43,17 @@ import io.gazeui.collections.Lists;
 public class ContainerControl<T extends Control> extends Control {
 
     private static final Comparator<Control> clientIdComparator;
+    private static final Function<Control, String> funcControlToClientId;
     
     static {
         clientIdComparator = new Comparator<Control>() {
             @Override
             public int compare(Control c1, Control c2) {
-                return c1.getClientId().compareTo(c2.getClientId());
+                return c1.getClientId().get().compareTo(c2.getClientId().get());
             }
         };
+        
+        funcControlToClientId = ((Function<Control, Optional<String>>)Control::getClientId).andThen(Optional::get);
     }
     
     private List<T> controls;
@@ -86,41 +90,36 @@ public class ContainerControl<T extends Control> extends Control {
     protected String creationScript() {
         return String.format(
                 "let %1$s = document.createElement('div');\n" +
-                "%1$s.id = '%1$s';\n", this.getClientId());
+                "%1$s.id = '%1$s';\n", this.getClientId().get());
     }
     
-    @SuppressWarnings("unchecked")
     @Override
-    protected void render(RenderScriptWriter writer, Control previousControlState) {
-        if (previousControlState == null) {
-            this.renderCreation(writer);
-        } else {
-            this.renderUpdate(writer, (ContainerControl<T>)previousControlState);
-        }
-    }
-    
-    private void renderCreation(RenderScriptWriter writer) {
+    protected void renderCreation(RenderScriptWriter writer) {
         writer.print(this.creationScript());
         
         for (Control childControl : this.getControls()) {
-            childControl.render(writer, null);
+            childControl.renderCreation(writer);
             writer.format("%s.appendChild(%s);\n", this.identificationToken(), childControl.identificationToken());
         }
     }
     
-    private void renderUpdate(RenderScriptWriter writer, ContainerControl<T> previousControlState) {
+    @Override
+    protected void renderUpdate(RenderScriptWriter writer, Control previousControlState) {
+        @SuppressWarnings("unchecked")
+        ContainerControl<T> previousContainerState = (ContainerControl<T>)previousControlState;
+        
         // We expect that operations of adding, removing and changing child controls order will not be so common.
         // So we check first for the case which at most updates on child controls were made. Doing that we avoid
         // running the Longest Common Subsequence algorithm (a heavy operation) for this simple case.
-        if (this.listsWithSameStructure(this.getControls(), previousControlState.getControls())) {
+        if (this.listsWithSameStructure(this.getControls(), previousContainerState.getControls())) {
             Iterator<T> currentChildControlsIterator = this.getControls().iterator();
-            Iterator<T> previousChildControlsIterator = previousControlState.getControls().iterator();
+            Iterator<T> previousChildControlsIterator = previousContainerState.getControls().iterator();
             
             while (currentChildControlsIterator.hasNext()) {
                 Control childControl = currentChildControlsIterator.next();
                 Control previousChildControl = previousChildControlsIterator.next();
                 
-                childControl.render(writer, previousChildControl);
+                childControl.renderUpdate(writer, previousChildControl);
             }
         } else {
             RenderScriptWriter writerRemove = new RenderScriptWriter();
@@ -128,18 +127,20 @@ public class ContainerControl<T extends Control> extends Control {
             RenderScriptWriter writerAddAndChangeOrder = new RenderScriptWriter();
             
             List<T> lcs = Lists.longestCommonSubsequence(this.getControls(),
-                    previousControlState.getControls(), clientIdComparator);
+                    previousContainerState.getControls(), clientIdComparator);
             
             // These maps are used only to have constant-time performance for get operations.
             // Doing that we avoid quadratic time complexity O(n^2).
-            Map<String, Control> lcsMap = Lists.toMap(lcs, Control::getClientId, Function.identity());
-            Map<String, Control> currentChildControlsMap = Lists.toMap(this.getControls(), Control::getClientId, Function.identity());
-            Map<String, Control> previousChildControlsMap = Lists.toMap(previousControlState.getControls(), Control::getClientId, Function.identity());
+            Map<String, Control> lcsMap = Lists.toMap(lcs, funcControlToClientId, Function.identity());
+            Map<String, Control> currentChildControlsMap = Lists.toMap(this.getControls(),
+                    funcControlToClientId, Function.identity());
+            Map<String, Control> previousChildControlsMap = Lists.toMap(previousContainerState.getControls(),
+                    funcControlToClientId, Function.identity());
             
             // 1. Remove
             
-            for (Control previousChildControl : previousControlState.getControls()) {
-                if (!currentChildControlsMap.containsKey(previousChildControl.getClientId())) {
+            for (Control previousChildControl : previousContainerState.getControls()) {
+                if (!currentChildControlsMap.containsKey(previousChildControl.getClientId().get())) {
                     writerRemove.print(previousChildControl.selectionScript());
                     writerRemove.format("%s.remove();\n", previousChildControl.identificationToken());
                 }
@@ -175,11 +176,11 @@ public class ContainerControl<T extends Control> extends Control {
                 //     2.2. Was added
                 //
                 
-                if (previousChildControlsMap.containsKey(childControl.getClientId())) {
-                    Control previousChildControlState = previousChildControlsMap.get(childControl.getClientId());
+                if (previousChildControlsMap.containsKey(childControl.getClientId().get())) {
+                    Control previousChildControlState = previousChildControlsMap.get(childControl.getClientId().get());
                     
                     RenderScriptWriter localWriterUpdate = new RenderScriptWriter();
-                    childControl.render(localWriterUpdate, previousChildControlState);
+                    childControl.renderUpdate(localWriterUpdate, previousChildControlState);
                     
                     if (!localWriterUpdate.isEmpty()) {
                         writerUpdate.print(localWriterUpdate);
@@ -187,8 +188,8 @@ public class ContainerControl<T extends Control> extends Control {
                     }
                 }
                 
-                if (!lcsMap.containsKey(childControl.getClientId())) {
-                    if (previousChildControlsMap.containsKey(childControl.getClientId())) {
+                if (!lcsMap.containsKey(childControl.getClientId().get())) {
+                    if (previousChildControlsMap.containsKey(childControl.getClientId().get())) {
                         // The element changed its order
                         if (!childControlIdentified) {
                             writerAddAndChangeOrder.print(childControl.selectionScript());
@@ -196,7 +197,7 @@ public class ContainerControl<T extends Control> extends Control {
                         }
                     } else {
                         // The element was added
-                        childControl.render(writerAddAndChangeOrder, null);
+                        childControl.renderCreation(writerAddAndChangeOrder);
                         childControlIdentified = true;
                     }
                     
