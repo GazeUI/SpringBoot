@@ -1,3 +1,8 @@
+//
+// Copyright (c) 2019-2020 Rosberg Linhares (rosberglinhares@gmail.com)
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+//
+
 plugins {
     `java-library`
     id("org.springframework.boot") version "2.2.2.RELEASE"

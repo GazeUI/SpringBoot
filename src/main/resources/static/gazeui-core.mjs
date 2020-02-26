@@ -1,3 +1,8 @@
+//
+// Copyright (c) 2020 Rosberg Linhares (rosberglinhares@gmail.com)
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+//
+
 export async function processServerUIEvent(controlId, eventName) {
     let eventInfo = {
         controlId: controlId,
