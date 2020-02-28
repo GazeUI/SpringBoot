@@ -2,6 +2,11 @@
 
 ## Coding Guidelines
 
+### File Encoding
+
+  - All source files are encoded in UTF-8.
+  - If the file contains code points with more than one byte, it must have a UTF-8 byte order mark (BOM).
+
 ### Copyright Notices and License Headers
 
   - Every file containing source code must include copyright and license information.
