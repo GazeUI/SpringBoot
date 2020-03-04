@@ -13,7 +13,8 @@ import org.springframework.context.annotation.Configuration;
 import io.gazeui.springboot.http.MediaTypeExtensions;
 
 @Configuration
-public class MimeTypeConfiguration implements WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> {
+public class MimeTypeConfiguration implements
+        WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> {
 
     @Override
     public void customize(ConfigurableServletWebServerFactory factory) {

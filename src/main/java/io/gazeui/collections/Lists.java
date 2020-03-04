@@ -18,7 +18,8 @@ public final class Lists {
         // No instances allowed
     }
     
-    public static <T> List<T> longestCommonSubsequence(List<T> list1, List<T> list2, Comparator<? super T> comparator) {
+    public static <T> List<T> longestCommonSubsequence(List<T> list1, List<T> list2,
+            Comparator<? super T> comparator) {
         int[][] tabulationData = new int[list1.size() + 1][list2.size() + 1];
         
         for (int row = tabulationData.length - 2; row >= 0; row--) {
@@ -26,7 +27,8 @@ public final class Lists {
                 if (comparator.compare(list1.get(row), list2.get(col)) == 0) {
                     tabulationData[row][col] = tabulationData[row + 1][col + 1] + 1;
                 } else {
-                    tabulationData[row][col] = Math.max(tabulationData[row][col + 1], tabulationData[row + 1][col]);
+                    tabulationData[row][col] = Math.max(tabulationData[row][col + 1],
+                            tabulationData[row + 1][col]);
                 }
             }
         }
@@ -56,8 +58,8 @@ public final class Lists {
     public static <T, K, V> Map<K, V> toMap(List<T> list, Function<? super T, ? extends K> keyMapper,
             Function<? super T, ? extends V> valueMapper) {
         
-        // We could use the Stream API, but the Collectors#toMap method does a merge operation between map keys,
-        // which we don't want to be done due to performance reasons.
+        // We could use the Stream API, but the Collectors#toMap method does a merge operation
+        // between map keys, which we don't want to be done due to performance reasons.
         
         Map<K, V> result = new HashMap<>(list.size());
         

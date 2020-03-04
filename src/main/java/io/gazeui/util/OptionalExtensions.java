@@ -15,8 +15,8 @@ public final class OptionalExtensions {
         // No instances allowed
     }
     
-    public static <T, X extends Throwable> void ifPresentOrElseThrow(Optional<T> optional, Consumer<? super T> action,
-            Supplier<? extends X> exceptionSupplier) throws X {
+    public static <T, X extends Throwable> void ifPresentOrElseThrow(Optional<T> optional,
+            Consumer<? super T> action, Supplier<? extends X> exceptionSupplier) throws X {
         if (optional.isPresent()) {
             action.accept(optional.get());
         } else {

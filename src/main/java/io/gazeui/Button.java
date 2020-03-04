@@ -90,10 +90,10 @@ public class Button extends Control {
         
         // According to the MDN website¹:
         //
-        // There is still a security risk whenever you use innerHTML to set strings over which you have no
-        // control [...]. For that reason, it is recommended that you do not use innerHTML when inserting plain text;
-        // instead, use Node.textContent. This doesn't parse the passed content as HTML, but instead inserts it as
-        // raw text.
+        // There is still a security risk whenever you use innerHTML to set strings over which you
+        // have no control [...]. For that reason, it is recommended that you do not use innerHTML
+        // when inserting plain text; instead, use Node.textContent. This doesn't parse the passed
+        // content as HTML, but instead inserts it as raw text.
         // 
         //   [1]: https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML
         
@@ -102,12 +102,13 @@ public class Button extends Control {
             writer.format("%s.textContent = '%s';\n", this.getClientId().get(), this.getText());
         }
         
-        // Here we are accessing the variable directly to avoid the unnecessary creation of the collection
-        // when there are no handlers.
+        // Here we are accessing the variable directly to avoid the unnecessary creation of the
+        // collection when there are no handlers.
         if (this.clickHandlers != null && !this.clickHandlers.isEmpty()) {
             moduleNeeded = true;
             
-            writer.format("%s.addEventListener('click', %s.onClickHandler, {\n", this.getClientId().get(), MODULE_NAME);
+            writer.format("%s.addEventListener('click', %s.onClickHandler, {\n",
+                    this.getClientId().get(), MODULE_NAME);
             writer.print(
                 "    capture: false,\n" +
                 "    passive: true\n" +
@@ -137,8 +138,8 @@ public class Button extends Control {
                 this.clickHandlers != null && !this.clickHandlers.isEmpty()) {
             moduleNeeded = true;
             
-            localWriter.format("%s.addEventListener('click', %s.onClickHandler, {\n", this.getClientId().get(),
-                    MODULE_NAME);
+            localWriter.format("%s.addEventListener('click', %s.onClickHandler, {\n",
+                    this.getClientId().get(), MODULE_NAME);
             localWriter.print(
                 "    capture: false,\n" +
                 "    passive: true\n" +
@@ -146,8 +147,8 @@ public class Button extends Control {
         } else if (!previousButton.getClickHandlers().isEmpty() && this.getClickHandlers().isEmpty()) {
             moduleNeeded = true;
             
-            localWriter.format("%s.removeEventListener('click', %s.onClickHandler, {\n", this.getClientId().get(),
-                    MODULE_NAME);
+            localWriter.format("%s.removeEventListener('click', %s.onClickHandler, {\n",
+                    this.getClientId().get(), MODULE_NAME);
             localWriter.print(
                 "    capture: false,\n" +
                 "    passive: true\n" +

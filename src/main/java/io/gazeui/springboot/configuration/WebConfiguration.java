@@ -29,7 +29,8 @@ public class WebConfiguration {
     public WebConfiguration(ApplicationContext applicationContext) {
         // Get the first EnableGazeUI annotation and ignore the other ones
         String beanNameWithEnableGazeUI = applicationContext.getBeanNamesForAnnotation(EnableGazeUI.class)[0];
-        this.enableGazeUIAnnotation = applicationContext.findAnnotationOnBean(beanNameWithEnableGazeUI, EnableGazeUI.class);
+        this.enableGazeUIAnnotation = applicationContext.findAnnotationOnBean(
+                beanNameWithEnableGazeUI, EnableGazeUI.class);
     }
     
     public EnableGazeUI getEnableGazeUIAnnotation() {

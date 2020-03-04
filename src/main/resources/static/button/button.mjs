@@ -13,8 +13,8 @@ import * as GazeUICore from '../gazeui-core.mjs';
 //      on both controls when the descendant control is stimulated.
 //   
 //   We deal with these two special cases checking if 'target' and 'currentTarget' are the same.
-//   We also use 'stopImmediatePropagation' just to certify that no other events will run for the same action.
-//   See the following link for more details about event order:
+//   We also use 'stopImmediatePropagation' just to certify that no other events will run for the
+//   same action. See the following link for more details about event order:
 //   
 //     [1]: https://www.quirksmode.org/js/events_order.html
 export async function onClickHandler(mouseEvent) {

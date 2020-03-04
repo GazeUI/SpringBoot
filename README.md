@@ -1,6 +1,8 @@
 # GazeUI for Spring Boot
 
-GazeUI lets you create front-end web applications using your server-side language of choice! No HTML, no CSS, no client-side JavaScript. This is the module that will allow you to plug GazeUI into your [Spring Boot](https://spring.io/projects/spring-boot) project.
+GazeUI lets you create front-end web applications using your server-side language of choice!
+No HTML, no CSS, no client-side JavaScript. This is the module that will allow you to plug GazeUI
+into your [Spring Boot](https://spring.io/projects/spring-boot) project.
 
 ## Getting Started
 
@@ -54,7 +56,8 @@ GazeUI lets you create front-end web applications using your server-side languag
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](docs/CONTRIBUTING.md) for details on how to contribute and the process for submitting pull requests to us.
+Please read [CONTRIBUTING.md](docs/CONTRIBUTING.md) for details on how to contribute and the process
+for submitting pull requests to us.
 
 ## License
 

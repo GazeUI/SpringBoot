@@ -14,8 +14,8 @@ import io.gazeui.util.OptionalExtensions;
 
 public class Window extends ContainerControl<WebPage> {
 
-    // Ideally this class would be declared final and with a private constructor, but none of these options work because
-    // this class is used as a Spring component.
+    // Ideally this class would be declared final and with a private constructor, but none of these
+    // options work because this class is used as a Spring component.
     
     private static final String WINDOW_ID = "window";
     private static final String PAGE_ID = "page";
@@ -93,14 +93,17 @@ public class Window extends ContainerControl<WebPage> {
             } catch (InvocationTargetException ex) {
                 // Rethrow any possible exception thrown by the WebPage subclass constructor
                 throw new RuntimeException(ex.getCause());
-            } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException ex) {
-                String errorMessage = String.format(ErrorMessage.UNEXPECTED_ERROR_PROCESSING_EVENT.getMessage(),
-                        eventName, control.toString());
+            } catch (NoSuchMethodException | SecurityException | IllegalAccessException |
+                    IllegalArgumentException ex) {
+                String errorMessage = String.format(
+                        ErrorMessage.UNEXPECTED_ERROR_PROCESSING_EVENT.getMessage(), eventName,
+                        control.toString());
                 
                 throw new GazeUIException(errorMessage, ex);
             }
         }, () -> {
-            String errorMessage = String.format(ErrorMessage.COULD_NOT_PROCESS_EVENT_CONTROL_ID_NOT_FOUND.getMessage(),
+            String errorMessage = String.format(
+                    ErrorMessage.COULD_NOT_PROCESS_EVENT_CONTROL_ID_NOT_FOUND.getMessage(),
                     eventName, controlId);
             
             return new NoSuchElementException(errorMessage);
@@ -109,15 +112,15 @@ public class Window extends ContainerControl<WebPage> {
     
     private Optional<? extends Control> getDescendantControlById(String controlId) {
         switch (controlId) {
-        case WINDOW_ID:
-            return Optional.of(this);
-            
-        case PAGE_ID:
-            return this.getChildPage();
-            
-        default:
-            // If it is neither the window nor the page, look at their descendant controls
-            return this.getChildPage().flatMap(page -> this.getDescendantControlById(page, controlId));
+            case WINDOW_ID:
+                return Optional.of(this);
+                
+            case PAGE_ID:
+                return this.getChildPage();
+                
+            default:
+                // If it is neither the window nor the page, look at their descendant controls
+                return this.getChildPage().flatMap(page -> this.getDescendantControlById(page, controlId));
         }
     }
     

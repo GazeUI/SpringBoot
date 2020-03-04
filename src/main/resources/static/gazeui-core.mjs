@@ -20,8 +20,8 @@ export async function processServerUIEvent(controlId, eventName) {
     
     let response = await fetch('process-server-ui-event.js', fetchOptions);
     
-    // We are using the 'response.body' property because, at Dec/2019, it has 73.94% of global usage¹, while the
-    // 'response.text()' method has only 36.71%².
+    // We are using the 'response.body' property because, at Dec/2019, it has 73.94% of global
+    // usage¹, while the 'response.text()' method has only 36.71%².
     // 
     //   [1]: https://caniuse.com/#feat=mdn-api_body_body
     //   [2]: https://caniuse.com/#feat=mdn-api_body_text

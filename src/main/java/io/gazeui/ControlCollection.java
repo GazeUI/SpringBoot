@@ -23,31 +23,34 @@ import java.util.Set;
 class ControlCollection<E extends Control> implements List<E> {
     /*
      * 1. The collection must be in the same package of Control to be possible to call the
-     *    onAddToCollection and onRemoveFromCollection methods. We think to be unnecessary to use observers
-     *    for this operation.
+     *    onAddToCollection and onRemoveFromCollection methods. We think to be unnecessary to use
+     *    observers for this operation.
      * 
-     * 2. The ideal collection here is one that does not allow duplicates, maintains insertion order and allows access
-     *    by index.
-     *     
-     *    2.1. A LinkedHashSet does not allow duplicates and maintains insertion order, but Set implementations
-     *         do not offer access by index.
-     *    2.2. List implementations maintain insertion order and allow access by index, but do not restrict duplicate
-     *         elements.
+     * 2. The ideal collection here is one that does not allow duplicates, maintains insertion order
+     *    and allows access by index.
+     *    
+     *    2.1. A LinkedHashSet does not allow duplicates and maintains insertion order, but Set
+     *         implementations do not offer access by index.
+     *    2.2. List implementations maintain insertion order and allow access by index, but do not
+     *         restrict duplicate elements.
      *    
      *    Therefore, we decided to use List and restrict duplicate elements by ourselves.
      */
     
     private final ContainerControl<?> owner;
-    // Doing by composition makes possible to change the inner list type, if necessary, without any changes to the API.
+    // Doing by composition makes possible to change the inner list type, if necessary, without any
+    // changes to the API.
     private final List<E> innerList;
     
     public ControlCollection(ContainerControl<?> owner) {
-        // The Longest Common Subsequence algorithm requires a lot of access by index, so the use of an ArrayList.
+        // The Longest Common Subsequence algorithm requires a lot of access by index, so the use of
+        // an ArrayList.
         this(owner, new ArrayList<>());
     }
     
     private ControlCollection(ContainerControl<?> owner, List<E> innerList) {
-        this.owner = Objects.requireNonNull(owner, ErrorMessage.CONTROL_COLLECTION_MUST_HAVE_OWNER.getMessage());
+        this.owner = Objects.requireNonNull(owner,
+                ErrorMessage.CONTROL_COLLECTION_MUST_HAVE_OWNER.getMessage());
         this.innerList = innerList;
     }
     
@@ -112,7 +115,8 @@ class ControlCollection<E extends Control> implements List<E> {
         if (control.getParent().filter(p -> p == this.owner).isPresent()) {
             previousControl = this.innerList.get(index);
             
-            // Once we are forcing unique items on the list, it is necessary only to remove the first occurrence.
+            // Once we are forcing unique items on the list, it is necessary only to remove the
+            // first occurrence.
             this.innerList.remove(control);
             this.innerList.add(index, control);
         } else {
@@ -258,10 +262,10 @@ class ControlCollection<E extends Control> implements List<E> {
                 this.innerIterator.add(control);
                 control.onAddToCollection(ControlCollection.this.owner);
             } else {
-                // Because we are avoiding duplicates on the list, here we would have to remove the element first
-                // and add it at the correct position, but this would throw a ConcurrentModificationException because
-                // it is not possible to remove another element while iterating over the list. So we decided to make
-                // this operation not allowed.
+                // Because we are avoiding duplicates on the list, here we would have to remove the
+                // element first and add it at the correct position, but this would throw a
+                // ConcurrentModificationException because it is not possible to remove another
+                // element while iterating over the list. So we decided to make this operation not allowed.
                 throw new UnsupportedOperationException(
                         ErrorMessage.CONTROL_COLLECTION_ADD_SET_EXISTING_ELEMENT_USING_ITERATOR.getMessage());
             }

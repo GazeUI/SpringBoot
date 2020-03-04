@@ -36,7 +36,8 @@ class OptionalExtensionsTests {
         Optional<Object> optional = Optional.of(originalObject);
         
         OptionalExtensions.ifPresentOrElseThrow(optional, obj -> {
-            assertSame(originalObject, obj, "Original object and action's input argument must refer to the same object");
+            assertSame(originalObject, obj, "Original object and action's input argument must refer " +
+                    "to the same object");
         }, () -> new RuntimeException());
     }
     
@@ -45,7 +46,8 @@ class OptionalExtensionsTests {
         Optional<Object> optional = Optional.empty();
         
         assertThrows(IndexOutOfBoundsException.class, () -> {
-            OptionalExtensions.ifPresentOrElseThrow(optional, obj -> {}, () -> new IndexOutOfBoundsException());
+            OptionalExtensions.ifPresentOrElseThrow(optional, obj -> {},
+                    () -> new IndexOutOfBoundsException());
         });
     }
 }

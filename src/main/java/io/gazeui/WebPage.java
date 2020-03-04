@@ -30,7 +30,8 @@ public abstract class WebPage extends ContainerControl<Control> {
         if (!Strings.isNullOrBlank(title)) {
             this.title = title;
         } else {
-            throw new IllegalArgumentException(ErrorMessage.HTML_VALIDATION_TITLE_MUST_NOT_BE_EMPTY.getMessage());
+            throw new IllegalArgumentException(
+                    ErrorMessage.HTML_VALIDATION_TITLE_MUST_NOT_BE_EMPTY.getMessage());
         }
     }
     
@@ -66,8 +67,9 @@ public abstract class WebPage extends ContainerControl<Control> {
     @Override
     protected void renderCreation(RenderScriptWriter writer) {
         if (Strings.isNullOrBlank(this.getTitle())) {
-            // According to the HTML 5.2 specification, the title element must contain at least one non-whitespace
-            // character. See https://www.w3.org/TR/html52/document-metadata.html#the-title-element for details.
+            // According to the HTML 5.2 specification, the title element must contain at least one
+            // non-whitespace character. See https://www.w3.org/TR/html52/document-metadata.html#the-title-element
+            // for details.
             this.setTitle(this.getClass().getSimpleName());
         }
         

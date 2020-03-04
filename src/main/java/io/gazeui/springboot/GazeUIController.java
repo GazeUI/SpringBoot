@@ -45,25 +45,27 @@ public class GazeUIController {
             
             // Regarding the title tag, The HTML 5.2 specification says¹:
             // 
-            //    1. If the document is an iframe srcdoc document or if title information is available from a
-            //       higher-level protocol: Zero or more elements of metadata content, of which no more than one is a
+            //    1. If the document is an iframe srcdoc document or if title information is available
+            //       from a higher-level protocol: Zero or more elements of metadata content, of
+            //       which no more than one is a title element and no more than one is a base element.
+            //       Otherwise: One or more elements of metadata content, of which exactly one is a
             //       title element and no more than one is a base element.
-            //       Otherwise: One or more elements of metadata content, of which exactly one is a title element and no
-            //       more than one is a base element.
-            //    2. The title element is a required child in most situations, but when a higher-level protocol provides
-            //       title information, e.g., in the Subject line of an e-mail when HTML is used as an e-mail authoring
-            //       format, the title element can be omitted.
-            //    3. If it’s reasonable for the Document to have no title, then the title element is probably not
-            //       required. See the head element’s content model for a description of when the element is required.
+            //    2. The title element is a required child in most situations, but when a higher-level
+            //       protocol provides title information, e.g., in the Subject line of an e-mail
+            //       when HTML is used as an e-mail authoring format, the title element can be omitted.
+            //    3. If it’s reasonable for the Document to have no title, then the title element is
+            //       probably not required. See the head element’s content model for a description
+            //       of when the element is required.
             //    
-            //    Although it is not so clear to us if according to the specification the title is required, we are
-            //    considering it required because the W3C Validator will give an error if no title tag is found.
-            //    Beyond that, the specification enforces that the title element must contain at least one non-whitespace
-            //    character². One solution to this is to deliver upfront the title content in the HTML below, but to
-            //    achieve this we would have to instantiate the main window class (a possible heavy operation) here
-            //    in this method to get its title, and this could result in a high waiting time for the user get any
-            //    content. Although this HTML will give an error when checked by the W3C Validator regarding the title
-            //    be empty, we are favoring performance.
+            //    Although it is not so clear to us if according to the specification the title is
+            //    required, we are considering it required because the W3C Validator will give an
+            //    error if no title tag is found. Beyond that, the specification enforces that the
+            //    title element must contain at least one non-whitespace character². One solution to
+            //    this is to deliver upfront the title content in the HTML below, but to achieve this
+            //    we would have to instantiate the main window class (a possible heavy operation)
+            //    here in this method to get its title, and this could result in a high waiting time
+            //    for the user get any content. Although this HTML will give an error when checked
+            //    by the W3C Validator regarding the title be empty, we are favoring performance.
             //    
             //      [1]: https://www.w3.org/TR/html52/document-metadata.html#document-metadata
             //      [2]: https://www.w3.org/TR/html52/document-metadata.html#the-title-element
@@ -80,9 +82,9 @@ public class GazeUIController {
                 sbInitialHtml.append(String.format("  <base href='%s'>\n", htmlBaseUrl));
             });
             
-            // Modules are deferred and use strict mode automatically. A deferred script is executed after the document
-            // has been parsed. This behavior is necessary because the page contents must be available in order to the
-            // script be correctly executed.
+            // Modules are deferred and use strict mode automatically. A deferred script is executed
+            // after the document has been parsed. This behavior is necessary because the page
+            // contents must be available in order to the script be correctly executed.
             sbInitialHtml.append(String.format("  <script type='module' src='%s'></script>\n",
                     GazeUIController.CREATE_INITIAL_UI_URL_PATH));
             
@@ -99,11 +101,10 @@ public class GazeUIController {
     }
     
     private Optional<String> getHtmlBaseUrl() {
-        // Set a <base> element is necessary because 'child-path' relative to 'http://localhost/parent-path/' is
-        // 'http://localhost/parent-path/child-path' but 'child-path' relative to 'http://localhost/parent-path' is
-        // 'http://localhost/child-path'.
-        // So when the GazeUI base path is '/level1/level2', for example, we have to set the HTML base element
-        // to 'level2/'.
+        // Set a <base> element is necessary because 'child-path' relative to 'http://localhost/parent-path/'
+        // is 'http://localhost/parent-path/child-path' but 'child-path' relative to
+        // 'http://localhost/parent-path' is 'http://localhost/child-path'. So when the GazeUI base
+        // path is '/level1/level2', for example, we have to set the HTML base element to 'level2/'.
         
         String gazeUIBasePath = this.gazeUIWebConfig.getEnableGazeUIAnnotation().basePath();
         String htmlBaseUrl;
@@ -142,17 +143,18 @@ public class GazeUIController {
     public String processServerUIEvent(@RequestBody ServerUIEventInfo serverUIEventInfo) {
         Window previousViewStateWindow = this.viewStateWindow.clone();
         
-        this.viewStateWindow.processUIEvent(serverUIEventInfo.getControlId(), serverUIEventInfo.getEventName());
+        this.viewStateWindow.processUIEvent(serverUIEventInfo.getControlId(),
+                serverUIEventInfo.getEventName());
         
         // It was not possible to use this generated script as a JavaScript ES6 module:
         // 
-        //   1. It is not possible to evaluate (using 'eval()' or 'window.Function()') the code of module. See links
-        //      [1] and [2].
-        //   2. The module loader API could also be used to create modules from strings, but it is out of date and is
-        //      undergoing revision³.
+        //   1. It is not possible to evaluate (using 'eval()' or 'window.Function()') the code of
+        //      module. See links [1] and [2].
+        //   2. The module loader API could also be used to create modules from strings, but it is
+        //      out of date and is undergoing revision³.
         //   3. Data URIs could be used⁴, but it would not be possible to import other modules⁵.
-        //   4. Once the module loader API is out of date, we choose not to use polyfills like ES Module Loader
-        //      Polyfill⁶ or SystemJS.
+        //   4. Once the module loader API is out of date, we choose not to use polyfills like
+        //      ES Module Loader Polyfill⁶ or SystemJS.
         //   
         //     [1]: https://exploringjs.com/es6/ch_modules.html#_can-i-eval-the-code-of-module
         //     [2]: https://2ality.com/2019/10/eval-via-import.html#eval()-does-not-support-export-and-import
@@ -167,7 +169,8 @@ public class GazeUIController {
         if (!writer.isEmpty()) {
             StringBuilder sbScript = new StringBuilder();
             
-            // Here is not necessary to use a closure because this code will be already executed in a limited scope.
+            // Here is not necessary to use a closure because this code will be already executed in
+            // a limited scope.
             sbScript.append("'use strict';\n");
             sbScript.append("\n");
             sbScript.append(writer.toString());

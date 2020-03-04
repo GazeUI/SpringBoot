@@ -12,8 +12,8 @@ public final class Strings {
     }
     
     /**
-     * Returns true if the string is null, empty or contains only white space characters, otherwise false.
-     * This is equivalent to the JDK 11 String#isBlank method.
+     * Returns true if the string is null, empty or contains only white space characters, otherwise
+     * false. This is equivalent to the JDK 11 String#isBlank method.
      */
     public static boolean isNullOrBlank(String str) {
         if (str != null) {

@@ -34,7 +34,8 @@ public class ContainerControl<T extends Control> extends Control {
             }
         };
         
-        funcControlToClientId = ((Function<Control, Optional<String>>)Control::getClientId).andThen(Optional::get);
+        funcControlToClientId = ((Function<Control, Optional<String>>) Control::getClientId)
+                .andThen(Optional::get);
     }
     
     private List<T> controls;
@@ -54,7 +55,8 @@ public class ContainerControl<T extends Control> extends Control {
     protected ContainerControl<T> clone() {
         ContainerControl<T> clonedContainerControl = (ContainerControl<T>)super.clone();
         
-        // The cloned collection will not suffer any operation, so it is not necessary to be a ControlCollection
+        // The cloned collection will not suffer any operation, so it is not necessary to be a
+        // ControlCollection
         clonedContainerControl.controls = new ArrayList<>(this.getControls().size());
         
         // Doing a deep copy of child controls
@@ -80,7 +82,8 @@ public class ContainerControl<T extends Control> extends Control {
         
         for (Control childControl : this.getControls()) {
             childControl.renderCreation(writer);
-            writer.format("%s.appendChild(%s);\n", this.identificationToken(), childControl.identificationToken());
+            writer.format("%s.appendChild(%s);\n", this.identificationToken(),
+                    childControl.identificationToken());
         }
     }
     
@@ -89,9 +92,10 @@ public class ContainerControl<T extends Control> extends Control {
         @SuppressWarnings("unchecked")
         ContainerControl<T> previousContainerState = (ContainerControl<T>)previousControlState;
         
-        // We expect that operations of adding, removing and changing child controls order will not be so common.
-        // So we check first for the case which at most updates on child controls were made. Doing that we avoid
-        // running the Longest Common Subsequence algorithm (a heavy operation) for this simple case.
+        // We expect that operations of adding, removing and changing child controls order will not
+        // be so common. So we check first for the case which at most updates on child controls were
+        // made. Doing that we avoid running the Longest Common Subsequence algorithm (a heavy operation)
+        // for this simple case.
         if (this.listsWithSameStructure(this.getControls(), previousContainerState.getControls())) {
             Iterator<T> currentChildControlsIterator = this.getControls().iterator();
             Iterator<T> previousChildControlsIterator = previousContainerState.getControls().iterator();
@@ -134,9 +138,9 @@ public class ContainerControl<T extends Control> extends Control {
             // If a variable pointing to the previous control in the loop was already created
             boolean previousLoopChildControlIdentified = false;
             
-            // Here we are iterating in reverse order to make possible use the Node.insertBefore() DOM method.
-            // At 12/2019, the ChildNode.after() method is marked experimental in the MDN website and is not
-            // supported by Safari:
+            // Here we are iterating in reverse order to make possible use the Node.insertBefore()
+            // DOM method. At 12/2019, the ChildNode.after() method is marked experimental in the
+            // MDN website and is not supported by Safari:
             //   [1]: https://developer.mozilla.org/en-US/docs/Web/API/ChildNode/after
             //   [2]: https://caniuse.com/#feat=mdn-api_childnode_after
             while (reverseListIterator.hasPrevious()) {
@@ -158,7 +162,8 @@ public class ContainerControl<T extends Control> extends Control {
                 //
                 
                 if (previousChildControlsMap.containsKey(childControl.getClientId().get())) {
-                    Control previousChildControlState = previousChildControlsMap.get(childControl.getClientId().get());
+                    Control previousChildControlState = previousChildControlsMap.get(
+                            childControl.getClientId().get());
                     
                     RenderScriptWriter localWriterUpdate = new RenderScriptWriter();
                     childControl.renderUpdate(localWriterUpdate, previousChildControlState);
@@ -189,9 +194,11 @@ public class ContainerControl<T extends Control> extends Control {
                             writerAddAndChangeOrder.print(previousLoopChildControl.selectionScript());
                         }
                         
-                        previousLoopChildControlIdentificationToken = previousLoopChildControl.identificationToken();
+                        previousLoopChildControlIdentificationToken = previousLoopChildControl
+                                .identificationToken();
                     } else {
-                        // If referenceNode is null, the newNode is inserted at the end of the list of child nodes.
+                        // If referenceNode is null, the newNode is inserted at the end of the list
+                        // of child nodes.
                         previousLoopChildControlIdentificationToken = null;
                     }
                     

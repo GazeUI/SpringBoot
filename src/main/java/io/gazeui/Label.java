@@ -33,10 +33,10 @@ public class Label extends Control {
         
         // According to the MDN website¹:
         //
-        // There is still a security risk whenever you use innerHTML to set strings over which you have no
-        // control [...]. For that reason, it is recommended that you do not use innerHTML when inserting plain text;
-        // instead, use Node.textContent. This doesn't parse the passed content as HTML, but instead inserts it as
-        // raw text.
+        // There is still a security risk whenever you use innerHTML to set strings over which you
+        // have no control [...]. For that reason, it is recommended that you do not use innerHTML
+        // when inserting plain text; instead, use Node.textContent. This doesn't parse the passed
+        // content as HTML, but instead inserts it as raw text.
         // 
         //   [1]: https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML
         

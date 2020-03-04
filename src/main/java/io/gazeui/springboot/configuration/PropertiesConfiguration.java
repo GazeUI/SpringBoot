@@ -23,7 +23,8 @@ public class PropertiesConfiguration {
     @Autowired
     public void setLocalProperties(ConfigurableEnvironment env, WebConfiguration gazeUIWebConfig) {
         Map<String, Object> propertiesMap = new HashMap<>();
-        propertiesMap.put(PROPERTY_KEY_GAZEUI_BASE_PATH, gazeUIWebConfig.getEnableGazeUIAnnotation().basePath());
+        propertiesMap.put(PROPERTY_KEY_GAZEUI_BASE_PATH,
+                gazeUIWebConfig.getEnableGazeUIAnnotation().basePath());
         
         MutablePropertySources propertySources = env.getPropertySources();
         propertySources.addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME, propertiesMap));
